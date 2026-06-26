@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { Search } from 'lucide-react';
 
 function calcularEdad(fechaString) {
   const hoy = new Date();
@@ -15,6 +16,7 @@ function calcularEdad(fechaString) {
 export default function FormularioIngreso({ onEstudianteAgregado }) {
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
+  const [genero, setGenero] = useState('');
   const [fechaNacimiento, setFechaNacimiento] = useState('');
   const [nombreRep, setNombreRep] = useState('');
   const [apellidoRep, setApellidoRep] = useState('');
@@ -24,6 +26,22 @@ export default function FormularioIngreso({ onEstudianteAgregado }) {
   const [salon, setSalon] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
+
+  // Historial para autocompletado
+  const [todosLosEstudiantes, setTodosLosEstudiantes] = useState([]);
+  const [sugerencias, setSugerencias] = useState([]);
+  const [estudianteSeleccionadoId, setEstudianteSeleccionadoId] = useState(null);
+
+  useEffect(() => {
+    // Cargar todos los estudiantes para autocompletado
+    const fetchEstudiantes = async () => {
+      const { data } = await supabase.from('estudiantes').select('*');
+      if (data) {
+        setTodosLosEstudiantes(data);
+      }
+    };
+    fetchEstudiantes();
+  }, []);
 
   // Evaluar edad y salón cada vez que cambia la fecha
   useEffect(() => {
@@ -47,6 +65,37 @@ export default function FormularioIngreso({ onEstudianteAgregado }) {
 
   const requiereRepresentante = salon === 'Comedor';
 
+  // Manejar búsqueda
+  const handleNombreChange = (e) => {
+    const val = e.target.value;
+    setNombre(val);
+    setEstudianteSeleccionadoId(null); // Reset selection if typing
+
+    if (val.length > 2) {
+      const filtrados = todosLosEstudiantes.filter(est => 
+        est.nombre.toLowerCase().includes(val.toLowerCase()) || 
+        est.apellido.toLowerCase().includes(val.toLowerCase())
+      );
+      setSugerencias(filtrados);
+    } else {
+      setSugerencias([]);
+    }
+  };
+
+  const seleccionarSugerencia = (est) => {
+    setNombre(est.nombre);
+    setApellido(est.apellido);
+    setFechaNacimiento(est.fecha_nacimiento);
+    setGenero(est.genero || '');
+    setEstudianteSeleccionadoId(est.id);
+    
+    if (est.nombre_representante) setNombreRep(est.nombre_representante);
+    if (est.apellido_representante) setApellidoRep(est.apellido_representante);
+    if (est.telefono_representante) setTelefonoRep(est.telefono_representante);
+
+    setSugerencias([]);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (edad < 8) {
@@ -57,30 +106,58 @@ export default function FormularioIngreso({ onEstudianteAgregado }) {
     setIsSubmitting(true);
     setMessage(null);
 
-    // Preparar datos, omitir representante si no es Comedor
-    const data = {
-      nombre,
-      apellido,
-      fecha_nacimiento: fechaNacimiento,
-      salon_actual: salon,
-      nombre_representante: requiereRepresentante ? nombreRep : null,
-      apellido_representante: requiereRepresentante ? apellidoRep : null,
-      telefono_representante: requiereRepresentante ? telefonoRep : null,
-    };
+    let errorSub = null;
 
-    const { error } = await supabase.from('estudiantes').insert([data]);
+    if (estudianteSeleccionadoId) {
+      // Estudiante ya existe, solo lo activamos para este domingo y actualizamos sus datos si cambiaron
+      const dataUpdate = {
+        nombre,
+        apellido,
+        fecha_nacimiento: fechaNacimiento,
+        genero,
+        salon_actual: salon,
+        nombre_representante: requiereRepresentante ? nombreRep : null,
+        apellido_representante: requiereRepresentante ? apellidoRep : null,
+        telefono_representante: requiereRepresentante ? telefonoRep : null,
+        activo_este_domingo: true
+      };
 
-    if (error) {
-      console.error(error);
-      setMessage({ type: 'error', text: 'Error al registrar: ' + error.message });
+      const { error } = await supabase
+        .from('estudiantes')
+        .update(dataUpdate)
+        .eq('id', estudianteSeleccionadoId);
+      
+      errorSub = error;
     } else {
-      setMessage({ type: 'success', text: 'Estudiante registrado correctamente.' });
+      // Es un nuevo estudiante
+      const dataInsert = {
+        nombre,
+        apellido,
+        fecha_nacimiento: fechaNacimiento,
+        genero,
+        salon_actual: salon,
+        nombre_representante: requiereRepresentante ? nombreRep : null,
+        apellido_representante: requiereRepresentante ? apellidoRep : null,
+        telefono_representante: requiereRepresentante ? telefonoRep : null,
+        activo_este_domingo: true
+      };
+
+      const { error } = await supabase.from('estudiantes').insert([dataInsert]);
+      errorSub = error;
+    }
+
+    if (errorSub) {
+      console.error(errorSub);
+      setMessage({ type: 'error', text: 'Error al registrar: ' + errorSub.message });
+    } else {
+      setMessage({ type: 'success', text: 'Asistencia registrada correctamente.' });
       // Reset form
-      setNombre(''); setApellido(''); setFechaNacimiento('');
+      setNombre(''); setApellido(''); setFechaNacimiento(''); setGenero('');
       setNombreRep(''); setApellidoRep(''); setTelefonoRep('');
+      setEstudianteSeleccionadoId(null);
+      
       if (onEstudianteAgregado) onEstudianteAgregado();
       
-      // Borrar mensaje después de 3 seg
       setTimeout(() => setMessage(null), 3000);
     }
     setIsSubmitting(false);
@@ -88,9 +165,9 @@ export default function FormularioIngreso({ onEstudianteAgregado }) {
 
   return (
     <div className="glass-panel">
-      <h2>Registrar Estudiante</h2>
+      <h2>Registrar Asistencia</h2>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-        El salón se asignará automáticamente basado en la edad.
+        Busca un estudiante existente o registra uno nuevo.
       </p>
 
       {message && (
@@ -100,14 +177,63 @@ export default function FormularioIngreso({ onEstudianteAgregado }) {
       )}
 
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
+        <div className="form-group" style={{ position: 'relative' }}>
           <label>Nombre</label>
-          <input type="text" required value={nombre} onChange={e => setNombre(e.target.value)} />
+          <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--glass-border)', paddingRight: '10px' }}>
+            <input 
+              type="text" 
+              required 
+              value={nombre} 
+              onChange={handleNombreChange} 
+              placeholder="Buscar o escribir nuevo..."
+              style={{ border: 'none', background: 'transparent' }}
+            />
+            <Search size={18} color="var(--text-secondary)" />
+          </div>
+
+          {sugerencias.length > 0 && (
+            <div style={{
+              position: 'absolute', top: '100%', left: 0, right: 0, 
+              background: 'var(--glass-bg)', backdropFilter: 'blur(10px)',
+              border: '1px solid var(--glass-border)', borderRadius: '8px',
+              zIndex: 10, maxHeight: '200px', overflowY: 'auto', marginTop: '5px'
+            }}>
+              {sugerencias.map(est => (
+                <div 
+                  key={est.id} 
+                  onClick={() => seleccionarSugerencia(est)}
+                  style={{
+                    padding: '10px', borderBottom: '1px solid var(--glass-border)',
+                    cursor: 'pointer', transition: 'background 0.2s'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                  onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  <strong style={{ color: 'white' }}>{est.nombre} {est.apellido}</strong>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                    Registrado previamente en {est.salon_actual || 'Salón'}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         
         <div className="form-group">
           <label>Apellido</label>
           <input type="text" required value={apellido} onChange={e => setApellido(e.target.value)} />
+        </div>
+
+        <div className="form-group">
+          <label>Género</label>
+          <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.5rem' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+              <input type="radio" name="genero" value="Niño" checked={genero === 'Niño'} onChange={e => setGenero(e.target.value)} required /> Niño
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+              <input type="radio" name="genero" value="Niña" checked={genero === 'Niña'} onChange={e => setGenero(e.target.value)} required /> Niña
+            </label>
+          </div>
         </div>
 
         <div className="form-group">
@@ -119,6 +245,11 @@ export default function FormularioIngreso({ onEstudianteAgregado }) {
           <div style={{ padding: '1rem', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '8px', marginBottom: '1.5rem' }}>
             <p><strong>Edad calculada:</strong> {edad} años</p>
             <p><strong>Salón asignado:</strong> {salon}</p>
+            {!estudianteSeleccionadoId && edad >= 16 && (
+              <p style={{ color: '#ef4444', marginTop: '0.5rem', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                Aviso: Este es un nuevo registro directo al salón Principal. Recuerda que usualmente este salón es solo para graduados.
+              </p>
+            )}
           </div>
         )}
 
@@ -141,7 +272,7 @@ export default function FormularioIngreso({ onEstudianteAgregado }) {
         )}
 
         <button type="submit" className="btn-primary" disabled={isSubmitting || (edad !== null && edad < 8)}>
-          {isSubmitting ? 'Guardando...' : 'Registrar'}
+          {isSubmitting ? 'Guardando...' : (estudianteSeleccionadoId ? 'Registrar Asistencia' : 'Registrar Nuevo Estudiante')}
         </button>
       </form>
     </div>
