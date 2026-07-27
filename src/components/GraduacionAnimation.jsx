@@ -66,9 +66,9 @@ export default function GraduacionAnimation({ nombre, salonNuevo, onClose }) {
         <h2 className="graduacion-titulo">¡Graduación!</h2>
         <p className="graduacion-nombre">{nombre}</p>
         <p className="graduacion-mensaje">
-          se ha graduado al salón
+          {salonNuevo === 'Graduado' ? 'se ha graduado del programa' : `se ha graduado al salón`}
         </p>
-        <div className="graduacion-salon">{salonNuevo}</div>
+        <div className="graduacion-salon">{salonNuevo === 'Graduado' ? 'Maranatha Kids 🎉' : salonNuevo}</div>
         <p className="graduacion-hint">Toca en cualquier lugar para continuar</p>
       </div>
     </div>

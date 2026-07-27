@@ -51,7 +51,7 @@ export default function FormularioIngreso({ onEstudianteAgregado, onGraduacion }
       if (e >= 8 && e <= 12) {
         setSalon('Usos Múltiples');
       } else if (e >= 13) {
-        setSalon('Principal');
+        setSalon('Graduado');
       } else {
         setSalon('No apto (menor de 8)');
       }
@@ -155,9 +155,9 @@ export default function FormularioIngreso({ onEstudianteAgregado, onGraduacion }
     } else {
       setMessage({ type: 'success', text: 'Asistencia registrada correctamente.' });
       
-      // Detectar graduación: si el salón anterior es diferente al nuevo
-      if (salonAnterior && salonAnterior !== salon && onGraduacion) {
-        onGraduacion({ nombre: `${nombre} ${apellido}`, salonNuevo: salon });
+      // Detectar graduación: si el estudiante ahora tiene 13+ años, se graduó del programa
+      if (salon === 'Graduado' && salonAnterior && salonAnterior !== 'Graduado' && onGraduacion) {
+        onGraduacion({ nombre: `${nombre} ${apellido}`, salonNuevo: 'Graduado' });
       }
 
       // Reset form
@@ -258,9 +258,9 @@ export default function FormularioIngreso({ onEstudianteAgregado, onGraduacion }
           <div style={{ padding: '1rem', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '8px', marginBottom: '1.5rem' }}>
             <p><strong>Edad calculada:</strong> {edad} años</p>
             <p><strong>Salón asignado:</strong> {salon}</p>
-            {!estudianteSeleccionadoId && edad >= 13 && (
-              <p style={{ color: '#ef4444', marginTop: '0.5rem', fontSize: '0.9rem', fontWeight: 'bold' }}>
-                Aviso: Este es un nuevo registro directo al salón Principal. Recuerda que usualmente este salón es solo para graduados.
+            {edad >= 13 && (
+              <p style={{ color: '#fbbf24', marginTop: '0.5rem', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                🎓 Este estudiante tiene 13+ años y se considera graduado del programa Maranatha Kids.
               </p>
             )}
           </div>
