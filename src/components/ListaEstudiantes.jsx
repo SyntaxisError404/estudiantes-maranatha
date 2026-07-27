@@ -47,9 +47,8 @@ export default function ListaEstudiantes({ refreshTrigger }) {
   // Agrupamos dinámicamente por la edad calculada para que la "graduación" sea automática
   // Si cumplen la edad hoy, automáticamente aparecen en el salón correcto sin importar su registro original.
   const agrupados = {
-    'Comedor': estudiantes.filter(e => e.edad >= 8 && e.edad <= 11),
-    'Usos Múltiples': estudiantes.filter(e => e.edad >= 12 && e.edad <= 15),
-    'Principal': estudiantes.filter(e => e.edad >= 16)
+    'Usos Múltiples': estudiantes.filter(e => e.edad >= 8 && e.edad <= 12),
+    'Principal': estudiantes.filter(e => e.edad >= 13)
   };
 
   if (loading) {
@@ -63,8 +62,7 @@ export default function ListaEstudiantes({ refreshTrigger }) {
     const ninas = lista.filter(e => e.genero === 'Niña').length;
     
     let icono;
-    if (salonSeleccionado === 'Comedor') { icono = <Users size={28} color="var(--accent-primary)"/>; }
-    else if (salonSeleccionado === 'Usos Múltiples') { icono = <Users size={28} color="var(--accent-primary)"/>; }
+    if (salonSeleccionado === 'Usos Múltiples') { icono = <Users size={28} color="var(--accent-primary)"/>; }
     else { icono = <User size={28} color="var(--accent-primary)"/>; }
 
     return (
@@ -123,22 +121,6 @@ export default function ListaEstudiantes({ refreshTrigger }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', animation: 'fadeIn 0.3s ease-out' }}>
       
-      {/* Carpeta Comedor */}
-      <div 
-        className="glass-panel salon-card" 
-        onClick={() => setSalonSeleccionado('Comedor')}
-        style={{ cursor: 'pointer', alignItems: 'center', textAlign: 'center', transition: 'all 0.2s', padding: '2rem' }}
-        onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.borderColor = 'var(--accent-primary)'; }}
-        onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'var(--glass-border)'; }}
-      >
-        <Folder color="var(--accent-primary)" fill="var(--glass-border)" size={64} style={{ marginBottom: '1rem' }} />
-        <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Comedor</h3>
-        <span style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>8 a 11 años</span>
-        <span className="salon-badge" style={{ fontSize: '1.1rem', padding: '0.5rem 1rem' }}>
-          Total: {agrupados['Comedor'].length} | {agrupados['Comedor'].filter(e=>e.genero==='Niño').length} Niños | {agrupados['Comedor'].filter(e=>e.genero==='Niña').length} Niñas
-        </span>
-      </div>
-
       {/* Carpeta Usos Múltiples */}
       <div 
         className="glass-panel salon-card" 
@@ -149,7 +131,7 @@ export default function ListaEstudiantes({ refreshTrigger }) {
       >
         <Folder color="var(--accent-primary)" fill="var(--glass-border)" size={64} style={{ marginBottom: '1rem' }} />
         <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Usos Múltiples</h3>
-        <span style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>12 a 15 años</span>
+        <span style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>8 a 12 años</span>
         <span className="salon-badge" style={{ fontSize: '1.1rem', padding: '0.5rem 1rem' }}>
           Total: {agrupados['Usos Múltiples'].length} | {agrupados['Usos Múltiples'].filter(e=>e.genero==='Niño').length} Niños | {agrupados['Usos Múltiples'].filter(e=>e.genero==='Niña').length} Niñas
         </span>
@@ -165,7 +147,7 @@ export default function ListaEstudiantes({ refreshTrigger }) {
       >
         <Folder color="var(--accent-primary)" fill="var(--glass-border)" size={64} style={{ marginBottom: '1rem' }} />
         <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Principal</h3>
-        <span style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>16+ años</span>
+        <span style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>13+ años</span>
         <span className="salon-badge" style={{ fontSize: '1.1rem', padding: '0.5rem 1rem' }}>
           Total: {agrupados['Principal'].length} | {agrupados['Principal'].filter(e=>e.genero==='Niño').length} Niños | {agrupados['Principal'].filter(e=>e.genero==='Niña').length} Niñas
         </span>

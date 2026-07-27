@@ -13,7 +13,7 @@ function calcularEdad(fechaString) {
   return edad;
 }
 
-export default function FormularioIngreso({ onEstudianteAgregado }) {
+export default function FormularioIngreso({ onEstudianteAgregado, onGraduacion }) {
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
   const [genero, setGenero] = useState('');
@@ -48,11 +48,9 @@ export default function FormularioIngreso({ onEstudianteAgregado }) {
     if (fechaNacimiento) {
       const e = calcularEdad(fechaNacimiento);
       setEdad(e);
-      if (e >= 8 && e <= 11) {
-        setSalon('Comedor');
-      } else if (e >= 12 && e <= 15) {
+      if (e >= 8 && e <= 12) {
         setSalon('Usos Múltiples');
-      } else if (e >= 16) {
+      } else if (e >= 13) {
         setSalon('Principal');
       } else {
         setSalon('No apto (menor de 8)');
@@ -63,7 +61,7 @@ export default function FormularioIngreso({ onEstudianteAgregado }) {
     }
   }, [fechaNacimiento]);
 
-  const requiereRepresentante = salon === 'Comedor';
+  const requiereRepresentante = false;
 
   // Manejar búsqueda
   const handleNombreChange = (e) => {
@@ -107,8 +105,13 @@ export default function FormularioIngreso({ onEstudianteAgregado }) {
     setMessage(null);
 
     let errorSub = null;
+    let salonAnterior = null;
 
     if (estudianteSeleccionadoId) {
+      // Guardar el salón anterior para detectar graduación
+      const estAnterior = todosLosEstudiantes.find(e => e.id === estudianteSeleccionadoId);
+      salonAnterior = estAnterior ? estAnterior.salon_actual : null;
+
       // Estudiante ya existe, solo lo activamos para este domingo y actualizamos sus datos si cambiaron
       const dataUpdate = {
         nombre,
@@ -151,6 +154,12 @@ export default function FormularioIngreso({ onEstudianteAgregado }) {
       setMessage({ type: 'error', text: 'Error al registrar: ' + errorSub.message });
     } else {
       setMessage({ type: 'success', text: 'Asistencia registrada correctamente.' });
+      
+      // Detectar graduación: si el salón anterior es diferente al nuevo
+      if (salonAnterior && salonAnterior !== salon && onGraduacion) {
+        onGraduacion({ nombre: `${nombre} ${apellido}`, salonNuevo: salon });
+      }
+
       // Reset form
       setNombre(''); setApellido(''); setFechaNacimiento(''); setGenero('');
       setNombreRep(''); setApellidoRep(''); setTelefonoRep('');
@@ -158,6 +167,10 @@ export default function FormularioIngreso({ onEstudianteAgregado }) {
       
       if (onEstudianteAgregado) onEstudianteAgregado();
       
+      // Recargar lista de estudiantes para autocompletado
+      const { data } = await supabase.from('estudiantes').select('*');
+      if (data) setTodosLosEstudiantes(data);
+
       setTimeout(() => setMessage(null), 3000);
     }
     setIsSubmitting(false);
@@ -245,7 +258,7 @@ export default function FormularioIngreso({ onEstudianteAgregado }) {
           <div style={{ padding: '1rem', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '8px', marginBottom: '1.5rem' }}>
             <p><strong>Edad calculada:</strong> {edad} años</p>
             <p><strong>Salón asignado:</strong> {salon}</p>
-            {!estudianteSeleccionadoId && edad >= 16 && (
+            {!estudianteSeleccionadoId && edad >= 13 && (
               <p style={{ color: '#ef4444', marginTop: '0.5rem', fontSize: '0.9rem', fontWeight: 'bold' }}>
                 Aviso: Este es un nuevo registro directo al salón Principal. Recuerda que usualmente este salón es solo para graduados.
               </p>

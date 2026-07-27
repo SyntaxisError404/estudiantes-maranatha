@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import FormularioIngreso from './components/FormularioIngreso';
 import ListaEstudiantes from './components/ListaEstudiantes';
 import HistorialDomingos from './components/HistorialDomingos';
+import GraduacionAnimation from './components/GraduacionAnimation';
 import { Sparkles, Archive, Users } from 'lucide-react';
 import { supabase } from './lib/supabase';
 
@@ -9,9 +10,14 @@ function App() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [vistaActiva, setVistaActiva] = useState('principal'); // 'principal' o 'historial'
   const [isCerrando, setIsCerrando] = useState(false);
+  const [graduacionData, setGraduacionData] = useState(null);
 
   const handleEstudianteAgregado = () => {
     setRefreshTrigger(prev => prev + 1);
+  };
+
+  const handleGraduacion = (data) => {
+    setGraduacionData(data);
   };
 
   const handleCerrarDomingo = async () => {
@@ -94,7 +100,7 @@ function App() {
       {vistaActiva === 'principal' ? (
         <main className="app-grid">
           <aside>
-            <FormularioIngreso onEstudianteAgregado={handleEstudianteAgregado} />
+            <FormularioIngreso onEstudianteAgregado={handleEstudianteAgregado} onGraduacion={handleGraduacion} />
           </aside>
           
           <section>
@@ -124,6 +130,15 @@ function App() {
         <main style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <HistorialDomingos />
         </main>
+      )}
+
+      {/* Animación de Graduación */}
+      {graduacionData && (
+        <GraduacionAnimation
+          nombre={graduacionData.nombre}
+          salonNuevo={graduacionData.salonNuevo}
+          onClose={() => setGraduacionData(null)}
+        />
       )}
     </div>
   );
