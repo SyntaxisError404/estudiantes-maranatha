@@ -15,10 +15,10 @@ function calcularEdad(fechaString) {
 }
 
 export default function RegistroRepresentante() {
-  // Datos del representante (Sin Cédula)
+  // Datos del representante (Sin Cédula, teléfono que inicia en 04 y max 11 dígitos)
   const [nombreRep, setNombreRep] = useState('');
   const [apellidoRep, setApellidoRep] = useState('');
-  const [telefonoRep, setTelefonoRep] = useState('');
+  const [telefonoRep, setTelefonoRep] = useState('04');
   const [parentescoRep, setParentescoRep] = useState('Padre');
   const [otroParentesco, setOtroParentesco] = useState('');
 
@@ -33,6 +33,30 @@ export default function RegistroRepresentante() {
   const [errorMsg, setErrorMsg] = useState(null);
   const [ticketGuardado, setTicketGuardado] = useState(null);
 
+  // Manejador del campo de teléfono (solo números, max 11 caracteres, siempre inicia en 04)
+  const handleTelefonoChange = (e) => {
+    let val = e.target.value.replace(/\D/g, ''); // Solo dígitos
+    
+    if (val.length === 0) {
+      setTelefonoRep('04');
+      return;
+    }
+
+    if (!val.startsWith('04')) {
+      if (val.startsWith('4')) {
+        val = '0' + val;
+      } else {
+        val = '04' + val;
+      }
+    }
+
+    if (val.length > 11) {
+      val = val.slice(0, 11);
+    }
+
+    setTelefonoRep(val);
+  };
+
   // Generar número de ticket único de 4 dígitos
   const generarTicket = () => {
     return Math.floor(1000 + Math.random() * 9000).toString();
@@ -43,6 +67,12 @@ export default function RegistroRepresentante() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg(null);
+
+    // Validar teléfono de 11 dígitos y que comience por 04
+    if (telefonoRep.length !== 11 || !telefonoRep.startsWith('04')) {
+      setErrorMsg('El número de teléfono debe tener exactamente 11 dígitos y comenzar con 04 (Ej. 04141234567).');
+      return;
+    }
 
     if (edad < 8) {
       setErrorMsg('El niño debe tener al menos 8 años para ser registrado en las actividades de Maranatha Kids.');
@@ -203,7 +233,6 @@ export default function RegistroRepresentante() {
               <ShieldCheck size={18} /> Datos del Representante
             </h3>
 
-            {/* Fila adaptativa para móvil (se apila verticalmente si la pantalla es estrecha) */}
             <div className="form-responsive-row">
               <div className="form-group" style={{ marginBottom: '0.8rem' }}>
                 <label style={{ fontSize: '0.85rem' }}>Nombre del Representante</label>
@@ -232,15 +261,19 @@ export default function RegistroRepresentante() {
 
             <div className="form-responsive-row">
               <div className="form-group" style={{ marginBottom: '0.8rem' }}>
-                <label style={{ fontSize: '0.85rem' }}>Teléfono de Contacto</label>
+                <label style={{ fontSize: '0.85rem' }}>Teléfono de Contacto (11 dígitos, inicia en 04)</label>
                 <input 
                   type="tel" 
                   required 
+                  maxLength={11}
                   value={telefonoRep} 
-                  onChange={e => setTelefonoRep(e.target.value)} 
-                  placeholder="Ej. 0414-1234567" 
-                  style={{ padding: '0.65rem 0.8rem', fontSize: '0.95rem' }}
+                  onChange={handleTelefonoChange} 
+                  placeholder="Ej. 04141234567" 
+                  style={{ padding: '0.65rem 0.8rem', fontSize: '0.95rem', letterSpacing: '0.5px' }}
                 />
+                <span style={{ fontSize: '0.75rem', color: telefonoRep.length === 11 ? '#10b981' : 'var(--text-secondary)', marginTop: '2px', display: 'block' }}>
+                  {telefonoRep.length} / 11 dígitos {telefonoRep.length === 11 ? '✓ Completo' : ''}
+                </span>
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
@@ -357,7 +390,7 @@ export default function RegistroRepresentante() {
           <button 
             type="submit" 
             className="btn-primary" 
-            disabled={isSubmitting || (fechaNacimientoEst && edad < 8)}
+            disabled={isSubmitting || telefonoRep.length !== 11 || (fechaNacimientoEst && edad < 8)}
             style={{ width: '100%', padding: '0.9rem', fontSize: '1rem', fontWeight: 'bold' }}
           >
             {isSubmitting ? 'Generando Turno...' : 'Obtener Número de Turno'}
