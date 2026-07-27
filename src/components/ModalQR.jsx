@@ -1,0 +1,118 @@
+import React, { useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
+import { X, Copy, ExternalLink, QrCode, Check } from 'lucide-react';
+
+export default function ModalQR({ onClose }) {
+  const [copiado, setCopiado] = useState(false);
+
+  // URL del formulario de registro público
+  const baseUrl = window.location.origin + window.location.pathname;
+  const qrUrl = baseUrl.includes('?') ? `${baseUrl}&registro=true` : `${baseUrl}?registro=true`;
+
+  const handleCopiarLink = () => {
+    navigator.clipboard.writeText(qrUrl);
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 2000);
+  };
+
+  const handleAbrirLink = () => {
+    window.open(qrUrl, '_blank');
+  };
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0, left: 0, right: 0, bottom: 0,
+      background: 'rgba(0, 0, 0, 0.75)',
+      backdropFilter: 'blur(8px)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: '1rem',
+      animation: 'fadeIn 0.2s ease-out'
+    }}>
+      <div className="glass-panel" style={{
+        maxWidth: '450px',
+        width: '100%',
+        textAlign: 'center',
+        position: 'relative',
+        border: '2px solid var(--accent-primary)',
+        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.5)'
+      }}>
+        <button 
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '12px', right: '12px',
+            background: 'transparent',
+            border: 'none',
+            color: 'var(--text-secondary)',
+            cursor: 'pointer',
+            padding: '4px'
+          }}
+        >
+          <X size={24} />
+        </button>
+
+        <div style={{ display: 'inline-flex', padding: '12px', background: 'rgba(59, 130, 246, 0.15)', borderRadius: '50%', marginBottom: '1rem' }}>
+          <QrCode size={36} color="var(--accent-primary)" />
+        </div>
+
+        <h2 style={{ fontSize: '1.5rem', margin: 0 }}>QR para Representantes</h2>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.4rem', marginBottom: '1.5rem' }}>
+          Escanea este código con la cámara del teléfono para registrar tus datos y los del niño/a.
+        </p>
+
+        {/* QR Code Container con fondo blanco para fácil escaneo */}
+        <div style={{
+          background: 'white',
+          padding: '1.5rem',
+          borderRadius: '16px',
+          display: 'inline-block',
+          marginBottom: '1.5rem',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+        }}>
+          <QRCodeSVG 
+            value={qrUrl} 
+            size={220} 
+            level="H" 
+            includeMargin={true}
+          />
+        </div>
+
+        <p style={{ fontSize: '0.85rem', color: 'var(--accent-primary)', fontWeight: 'bold', marginBottom: '1.2rem' }}>
+          Al completar el registro, el sistema generará un número de ticket.
+        </p>
+
+        {/* Botones de acción */}
+        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+          <button 
+            onClick={handleCopiarLink}
+            style={{
+              flex: 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
+              background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
+              color: 'white', padding: '0.75rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem'
+            }}
+          >
+            {copiado ? <Check size={18} color="#10b981" /> : <Copy size={18} />}
+            {copiado ? '¡Copiado!' : 'Copiar Enlace'}
+          </button>
+
+          <button 
+            onClick={handleAbrirLink}
+            style={{
+              flex: 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
+              background: 'var(--accent-gradient)', border: 'none',
+              color: 'white', padding: '0.75rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 'bold'
+            }}
+          >
+            <ExternalLink size={18} /> Probar Formulario
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

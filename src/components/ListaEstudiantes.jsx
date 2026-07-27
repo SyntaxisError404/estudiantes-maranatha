@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Users, ShieldCheck, Trash2, Folder, ChevronLeft } from 'lucide-react';
+import { Users, ShieldCheck, Trash2, Folder, ChevronLeft, Search, Ticket, Phone } from 'lucide-react';
 
 export default function ListaEstudiantes({ refreshTrigger }) {
   const [estudiantes, setEstudiantes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [salonSeleccionado, setSalonSeleccionado] = useState(null);
+  const [busqueda, setBusqueda] = useState('');
 
   useEffect(() => {
     fetchEstudiantes();
@@ -13,7 +14,6 @@ export default function ListaEstudiantes({ refreshTrigger }) {
 
   const fetchEstudiantes = async () => {
     setLoading(true);
-    // Consultamos la vista en lugar de la tabla para obtener la edad dinámica calculada por la BD
     const { data, error } = await supabase
       .from('vista_estudiantes')
       .select('*')
@@ -44,20 +44,34 @@ export default function ListaEstudiantes({ refreshTrigger }) {
     }
   };
 
-  // Agrupamos dinámicamente por la edad calculada para que la "graduación" sea automática
-  // Si cumplen la edad hoy, automáticamente aparecen en el salón correcto sin importar su registro original.
-  // Los estudiantes de 13+ se consideran graduados y ya no aparecen en ningún salón.
+  // Filtrar estudiantes por término de búsqueda (Ticket #, Nombre, Cédula, Representante)
+  const estudiantesFiltrados = estudiantes.filter(e => {
+    if (!busqueda.trim()) return true;
+    const term = busqueda.toLowerCase().trim();
+    const nombreCompleto = `${e.nombre} ${e.apellido}`.toLowerCase();
+    const rep = (e.nombre_representante || '').toLowerCase();
+    const tel = (e.telefono_representante || '').toLowerCase();
+    return nombreCompleto.includes(term) || rep.includes(term) || tel.includes(term);
+  });
+
   const agrupados = {
-    'Usos Múltiples': estudiantes.filter(e => e.edad >= 8 && e.edad <= 12)
+    'Usos Múltiples': estudiantesFiltrados.filter(e => e.edad >= 8 && e.edad <= 12)
   };
 
   if (loading) {
     return <div className="glass-panel" style={{ textAlign: 'center' }}>Cargando datos...</div>;
   }
 
+  // Extraer número de ticket de la cadena si existe
+  const extraerTicket = (repInfo) => {
+    if (!repInfo) return null;
+    const match = repInfo.match(/Ticket:\s*#?([0-9A-Za-z]+)/i);
+    return match ? match[1] : null;
+  };
+
   // VISTA NIVEL 2: Detalle de un salón
   if (salonSeleccionado) {
-    const lista = agrupados[salonSeleccionado];
+    const lista = agrupados[salonSeleccionado] || [];
     const ninos = lista.filter(e => e.genero === 'Niño').length;
     const ninas = lista.filter(e => e.genero === 'Niña').length;
     
@@ -65,12 +79,26 @@ export default function ListaEstudiantes({ refreshTrigger }) {
 
     return (
       <div className="glass-panel" style={{ animation: 'fadeIn 0.3s ease-out' }}>
-        <button 
-          onClick={() => setSalonSeleccionado(null)}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', marginBottom: '1.5rem', fontSize: '1rem' }}
-        >
-          <ChevronLeft size={20} /> Volver a los salones
-        </button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+          <button 
+            onClick={() => setSalonSeleccionado(null)}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', fontSize: '1rem' }}
+          >
+            <ChevronLeft size={20} /> Volver a los salones
+          </button>
+
+          {/* Buscador interno por ticket o nombre */}
+          <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '0.4rem 0.8rem', minWidth: '260px' }}>
+            <Search size={18} color="var(--text-secondary)" style={{ marginRight: '8px' }} />
+            <input 
+              type="text" 
+              placeholder="Buscar por Ticket #, Nombre, CI..." 
+              value={busqueda} 
+              onChange={e => setBusqueda(e.target.value)}
+              style={{ background: 'transparent', border: 'none', color: 'white', width: '100%', outline: 'none' }}
+            />
+          </div>
+        </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
@@ -82,33 +110,53 @@ export default function ListaEstudiantes({ refreshTrigger }) {
           </span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
           {lista.length === 0 ? (
-            <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', gridColumn: '1 / -1' }}>No hay estudiantes registrados hoy en este salón.</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', gridColumn: '1 / -1' }}>
+              {busqueda ? 'No se encontraron resultados para la búsqueda.' : 'No hay estudiantes registrados hoy en este salón.'}
+            </p>
           ) : (
-            lista.map(e => (
-              <div key={e.id} className="estudiante-item" style={{ borderLeft: `4px solid ${e.genero === 'Niña' ? '#ec4899' : e.genero === 'Niño' ? 'var(--accent-primary)' : 'var(--text-secondary)'}` }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <div className="estudiante-nombre">{e.nombre} {e.apellido}</div>
-                    <div className="estudiante-edad">{e.edad} años</div>
-                    {e.nombre_representante && (
-                      <div className="estudiante-rep" style={{ marginTop: '0.5rem', background: 'rgba(251, 191, 36, 0.15)', padding: '0.3rem 0.6rem', borderRadius: '4px', display: 'inline-block' }}>
-                        <ShieldCheck size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }}/>
-                        Rep: {e.nombre_representante} {e.apellido_representante}
-                      </div>
-                    )}
+            lista.map(e => {
+              const ticketNum = extraerTicket(e.nombre_representante);
+              return (
+                <div key={e.id} className="estudiante-item" style={{ borderLeft: `4px solid ${e.genero === 'Niña' ? '#ec4899' : e.genero === 'Niño' ? 'var(--accent-primary)' : 'var(--text-secondary)'}`, padding: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      {ticketNum && (
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(59, 130, 246, 0.2)', border: '1px solid var(--accent-primary)', color: 'white', fontSize: '0.85rem', fontWeight: 'bold', padding: '0.2rem 0.5rem', borderRadius: '6px', marginBottom: '0.5rem' }}>
+                          <Ticket size={14} color="var(--accent-primary)" /> Ticket #{ticketNum}
+                        </div>
+                      )}
+                      
+                      <div className="estudiante-nombre" style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{e.nombre} {e.apellido}</div>
+                      <div className="estudiante-edad" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{e.edad} años ({e.genero || 'No especificado'})</div>
+                      
+                      {e.nombre_representante && (
+                        <div className="estudiante-rep" style={{ marginTop: '0.6rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--glass-border)', padding: '0.5rem', borderRadius: '6px' }}>
+                          <div style={{ fontSize: '0.85rem', color: 'white', fontWeight: '500' }}>
+                            <ShieldCheck size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px', color: '#fbbf24' }}/>
+                            {e.nombre_representante}
+                          </div>
+                          {e.telefono_representante && (
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                              <Phone size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }}/>
+                              {e.telefono_representante}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <button 
+                      onClick={() => handleRemoverEstudiante(e.id)}
+                      style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '0.2rem' }}
+                      title="Remover de la lista de hoy"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
-                  <button 
-                    onClick={() => handleRemoverEstudiante(e.id)}
-                    style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '0.2rem' }}
-                    title="Remover de la lista de hoy"
-                  >
-                    <Trash2 size={16} />
-                  </button>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
@@ -117,24 +165,36 @@ export default function ListaEstudiantes({ refreshTrigger }) {
 
   // VISTA NIVEL 1: Carpetas
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', animation: 'fadeIn 0.3s ease-out' }}>
-      
-      {/* Carpeta Usos Múltiples */}
-      <div 
-        className="glass-panel salon-card" 
-        onClick={() => setSalonSeleccionado('Usos Múltiples')}
-        style={{ cursor: 'pointer', alignItems: 'center', textAlign: 'center', transition: 'all 0.2s', padding: '2rem' }}
-        onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.borderColor = 'var(--accent-primary)'; }}
-        onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'var(--glass-border)'; }}
-      >
-        <Folder color="var(--accent-primary)" fill="var(--glass-border)" size={64} style={{ marginBottom: '1rem' }} />
-        <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Usos Múltiples</h3>
-        <span style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>8 a 12 años</span>
-        <span className="salon-badge" style={{ fontSize: '1.1rem', padding: '0.5rem 1rem' }}>
-          Total: {agrupados['Usos Múltiples'].length} | {agrupados['Usos Múltiples'].filter(e=>e.genero==='Niño').length} Niños | {agrupados['Usos Múltiples'].filter(e=>e.genero==='Niña').length} Niñas
-        </span>
+    <div>
+      {/* Buscador global */}
+      <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '10px', padding: '0.6rem 1rem' }}>
+        <Search size={20} color="var(--text-secondary)" style={{ marginRight: '10px' }} />
+        <input 
+          type="text" 
+          placeholder="Buscar por Ticket # (Ej: #1042), Nombre, Cédula o Representante..." 
+          value={busqueda} 
+          onChange={e => setBusqueda(e.target.value)}
+          style={{ background: 'transparent', border: 'none', color: 'white', width: '100%', fontSize: '1rem', outline: 'none' }}
+        />
       </div>
 
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', animation: 'fadeIn 0.3s ease-out' }}>
+        {/* Carpeta Usos Múltiples */}
+        <div 
+          className="glass-panel salon-card" 
+          onClick={() => setSalonSeleccionado('Usos Múltiples')}
+          style={{ cursor: 'pointer', alignItems: 'center', textAlign: 'center', transition: 'all 0.2s', padding: '2rem' }}
+          onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.borderColor = 'var(--accent-primary)'; }}
+          onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'var(--glass-border)'; }}
+        >
+          <Folder color="var(--accent-primary)" fill="var(--glass-border)" size={64} style={{ marginBottom: '1rem' }} />
+          <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Usos Múltiples</h3>
+          <span style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>8 a 12 años</span>
+          <span className="salon-badge" style={{ fontSize: '1.1rem', padding: '0.5rem 1rem' }}>
+            Total: {agrupados['Usos Múltiples'].length} | {agrupados['Usos Múltiples'].filter(e=>e.genero==='Niño').length} Niños | {agrupados['Usos Múltiples'].filter(e=>e.genero==='Niña').length} Niñas
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

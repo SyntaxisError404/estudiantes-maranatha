@@ -1,16 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import FormularioIngreso from './components/FormularioIngreso';
 import ListaEstudiantes from './components/ListaEstudiantes';
 import HistorialDomingos from './components/HistorialDomingos';
 import GraduacionAnimation from './components/GraduacionAnimation';
-import { Sparkles, Archive, Users } from 'lucide-react';
+import RegistroRepresentante from './components/RegistroRepresentante';
+import ModalQR from './components/ModalQR';
+import { Sparkles, Archive, Users, QrCode, UserCheck } from 'lucide-react';
 import { supabase } from './lib/supabase';
 
 function App() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [vistaActiva, setVistaActiva] = useState('principal'); // 'principal' o 'historial'
+  const [vistaActiva, setVistaActiva] = useState('principal'); // 'principal', 'historial', 'registro-qr'
   const [isCerrando, setIsCerrando] = useState(false);
   const [graduacionData, setGraduacionData] = useState(null);
+  const [mostrarModalQR, setMostrarModalQR] = useState(false);
+
+  // Detectar si se ingresó directamente por escaneo de código QR (URL con ?registro=true o #registro)
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const hasRegistroParam = searchParams.get('registro') === 'true' || window.location.hash === '#registro';
+    if (hasRegistroParam) {
+      setVistaActiva('registro-qr');
+    }
+  }, []);
 
   const handleEstudianteAgregado = () => {
     setRefreshTrigger(prev => prev + 1);
@@ -49,8 +61,6 @@ function App() {
       if (errInsert) throw errInsert;
 
       // 3. Desactivar a todos los estudiantes (activo_este_domingo = false)
-      // Supabase no soporta un simple UPDATE sin filtros en el JS client para proteger datos,
-      // así que actualizamos usando in filter o actualizando todos los que estén en true.
       const { error: errUpdate } = await supabase
         .from('estudiantes')
         .update({ activo_este_domingo: false })
@@ -68,6 +78,15 @@ function App() {
     setIsCerrando(false);
   };
 
+  // Si la vista es la del representante (por QR o navegación directa)
+  if (vistaActiva === 'registro-qr') {
+    return (
+      <div className="container">
+        <RegistroRepresentante onVolverAlPanel={() => setVistaActiva('principal')} />
+      </div>
+    );
+  }
+
   return (
     <div className="container">
       <header>
@@ -76,22 +95,55 @@ function App() {
         </h1>
         <p>Sistema de Gestión y Transición de Salones</p>
 
-        {/* Navegación */}
-        <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+        {/* Botón destacado para mostrar QR a los representantes */}
+        <div style={{ marginTop: '1.2rem', textAlign: 'center' }}>
+          <button
+            onClick={() => setMostrarModalQR(true)}
+            style={{
+              background: 'rgba(59, 130, 246, 0.2)',
+              border: '2px solid var(--accent-primary)',
+              color: 'white',
+              padding: '0.6rem 1.2rem',
+              borderRadius: '30px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)'
+            }}
+          >
+            <QrCode size={20} color="var(--accent-primary)" />
+            Ver Código QR para Representantes
+          </button>
+        </div>
+
+        {/* Navegación Principal */}
+        <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.8rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button 
             onClick={() => setVistaActiva('principal')}
             className={vistaActiva === 'principal' ? 'btn-primary' : 'btn-secondary'}
-            style={vistaActiva !== 'principal' ? { background: 'var(--glass-bg)', color: 'white', border: '1px solid var(--glass-border)', padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer' } : {}}
+            style={vistaActiva !== 'principal' ? { background: 'var(--glass-bg)', color: 'white', border: '1px solid var(--glass-border)', padding: '0.75rem 1.2rem', borderRadius: '8px', cursor: 'pointer' } : { padding: '0.75rem 1.2rem' }}
           >
-            <Users size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }}/> 
+            <Users size={18} style={{ verticalAlign: 'middle', marginRight: '6px' }}/> 
             Panel Actual
           </button>
+
+          <button 
+            onClick={() => setVistaActiva('registro-qr')}
+            className={vistaActiva === 'registro-qr' ? 'btn-primary' : 'btn-secondary'}
+            style={vistaActiva !== 'registro-qr' ? { background: 'var(--glass-bg)', color: 'white', border: '1px solid var(--glass-border)', padding: '0.75rem 1.2rem', borderRadius: '8px', cursor: 'pointer' } : { padding: '0.75rem 1.2rem' }}
+          >
+            <UserCheck size={18} style={{ verticalAlign: 'middle', marginRight: '6px' }}/> 
+            Formulario Representante
+          </button>
+
           <button 
             onClick={() => setVistaActiva('historial')}
             className={vistaActiva === 'historial' ? 'btn-primary' : 'btn-secondary'}
-            style={vistaActiva !== 'historial' ? { background: 'var(--glass-bg)', color: 'white', border: '1px solid var(--glass-border)', padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer' } : {}}
+            style={vistaActiva !== 'historial' ? { background: 'var(--glass-bg)', color: 'white', border: '1px solid var(--glass-border)', padding: '0.75rem 1.2rem', borderRadius: '8px', cursor: 'pointer' } : { padding: '0.75rem 1.2rem' }}
           >
-            <Archive size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }}/> 
+            <Archive size={18} style={{ verticalAlign: 'middle', marginRight: '6px' }}/> 
             Ver Historial
           </button>
         </div>
@@ -130,6 +182,11 @@ function App() {
         <main style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <HistorialDomingos />
         </main>
+      )}
+
+      {/* Modal QR Code */}
+      {mostrarModalQR && (
+        <ModalQR onClose={() => setMostrarModalQR(false)} />
       )}
 
       {/* Animación de Graduación */}
