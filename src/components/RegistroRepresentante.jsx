@@ -261,7 +261,7 @@ export default function RegistroRepresentante() {
 
             <div className="form-responsive-row">
               <div className="form-group" style={{ marginBottom: '0.8rem' }}>
-                <label style={{ fontSize: '0.85rem' }}>Teléfono de Contacto (11 dígitos, inicia en 04)</label>
+                <label style={{ fontSize: '0.85rem' }}>Teléfono de Contacto</label>
                 <input 
                   type="tel" 
                   required 
@@ -271,9 +271,6 @@ export default function RegistroRepresentante() {
                   placeholder="Ej. 04141234567" 
                   style={{ padding: '0.65rem 0.8rem', fontSize: '0.95rem', letterSpacing: '0.5px' }}
                 />
-                <span style={{ fontSize: '0.75rem', color: telefonoRep.length === 11 ? '#10b981' : 'var(--text-secondary)', marginTop: '2px', display: 'block' }}>
-                  {telefonoRep.length} / 11 dígitos {telefonoRep.length === 11 ? '✓ Completo' : ''}
-                </span>
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
