@@ -206,7 +206,9 @@ export default function RegistroRepresentante() {
     );
   }
 
-  // VISTA FORMULARIO (SOLO Y EXCLUSIVAMENTE FORMULARIO)
+  const hoyObj = new Date();
+  const fechaHoy = `${hoyObj.getFullYear()}-${String(hoyObj.getMonth() + 1).padStart(2, '0')}-${String(hoyObj.getDate()).padStart(2, '0')}`;
+
   return (
     <div style={{ maxWidth: '500px', margin: '1rem auto', padding: '0 0.5rem', animation: 'fadeIn 0.3s ease-out' }}>
       <div className="glass-panel" style={{ padding: '1.25rem 1rem' }}>
@@ -368,6 +370,7 @@ export default function RegistroRepresentante() {
                   type="date" 
                   required 
                   min="2015-01-01"
+                  max={fechaHoy}
                   value={fechaNacimientoEst} 
                   onChange={e => setFechaNacimientoEst(e.target.value)} 
                   style={{ padding: '0.65rem 0.8rem', fontSize: '0.95rem' }}
