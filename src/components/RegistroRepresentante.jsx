@@ -367,6 +367,7 @@ export default function RegistroRepresentante() {
                 <input 
                   type="date" 
                   required 
+                  min="2015-01-01"
                   value={fechaNacimientoEst} 
                   onChange={e => setFechaNacimientoEst(e.target.value)} 
                   style={{ padding: '0.65rem 0.8rem', fontSize: '0.95rem' }}

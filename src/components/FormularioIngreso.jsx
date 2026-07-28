@@ -251,7 +251,7 @@ export default function FormularioIngreso({ onEstudianteAgregado, onGraduacion }
 
         <div className="form-group">
           <label>Fecha de Nacimiento</label>
-          <input type="date" required value={fechaNacimiento} onChange={e => setFechaNacimiento(e.target.value)} />
+          <input type="date" required min="2015-01-01" value={fechaNacimiento} onChange={e => setFechaNacimiento(e.target.value)} />
         </div>
 
         {edad !== null && (
