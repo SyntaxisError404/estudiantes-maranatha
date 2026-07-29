@@ -33,6 +33,8 @@ export default function RegistroRepresentante() {
   const [errorMsg, setErrorMsg] = useState(null);
   const [ticketGuardado, setTicketGuardado] = useState(null);
 
+  const [ticketSesion, setTicketSesion] = useState(null);
+
   // Manejador del campo de teléfono (solo números, max 11 caracteres, siempre inicia en 04)
   const handleTelefonoChange = (e) => {
     let val = e.target.value.replace(/\D/g, ''); // Solo dígitos
@@ -83,7 +85,10 @@ export default function RegistroRepresentante() {
 
     try {
       const parentescoFinal = parentescoRep === 'Otro' ? otroParentesco : parentescoRep;
-      const numTicket = generarTicket();
+      const numTicket = ticketSesion || generarTicket();
+      if (!ticketSesion) {
+        setTicketSesion(numTicket);
+      }
       const salonAsignado = edad >= 13 ? 'Graduado' : 'Usos Múltiples';
 
       // Formatear la cadena del representante para incluir Parentesco y Ticket
