@@ -254,7 +254,7 @@ export default function FormularioIngreso({ onEstudianteAgregado, onGraduacion }
           <input 
             type="date" 
             required 
-            min="2015-01-01" 
+            min="2014-01-01" 
             max={`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`}
             value={fechaNacimiento} 
             onChange={e => setFechaNacimiento(e.target.value)} 

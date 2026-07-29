@@ -369,7 +369,7 @@ export default function RegistroRepresentante() {
                 <input 
                   type="date" 
                   required 
-                  min="2015-01-01"
+                  min="2014-01-01"
                   max={fechaHoy}
                   value={fechaNacimientoEst} 
                   onChange={e => setFechaNacimientoEst(e.target.value)} 
