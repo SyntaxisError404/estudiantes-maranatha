@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Users, ShieldCheck, Trash2, Folder, ChevronLeft, Search, Ticket, Phone } from 'lucide-react';
+import { Users, ShieldCheck, Trash2, Folder, ChevronLeft, Search, Ticket, Phone, Pencil } from 'lucide-react';
+import ModalEditarEstudiante from './ModalEditarEstudiante';
 
 export default function ListaEstudiantes({ refreshTrigger }) {
   const [estudiantes, setEstudiantes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [salonSeleccionado, setSalonSeleccionado] = useState(null);
   const [busqueda, setBusqueda] = useState('');
+  const [estudianteAEditar, setEstudianteAEditar] = useState(null);
 
   useEffect(() => {
     fetchEstudiantes();
@@ -121,7 +123,7 @@ export default function ListaEstudiantes({ refreshTrigger }) {
               return (
                 <div key={e.id} className="estudiante-item" style={{ borderLeft: `4px solid ${e.genero === 'Niña' ? '#ec4899' : e.genero === 'Niño' ? 'var(--accent-primary)' : 'var(--text-secondary)'}`, padding: '1rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
+                    <div style={{ flex: 1, paddingRight: '0.5rem' }}>
                       {ticketNum && (
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(59, 130, 246, 0.2)', border: '1px solid var(--accent-primary)', color: 'white', fontSize: '0.85rem', fontWeight: 'bold', padding: '0.2rem 0.5rem', borderRadius: '6px', marginBottom: '0.5rem' }}>
                           <Ticket size={14} color="var(--accent-primary)" /> Ticket #{ticketNum}
@@ -146,19 +148,38 @@ export default function ListaEstudiantes({ refreshTrigger }) {
                         </div>
                       )}
                     </div>
-                    <button 
-                      onClick={() => handleRemoverEstudiante(e.id)}
-                      style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '0.2rem' }}
-                      title="Remover de la lista de hoy"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+
+                    <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                      <button 
+                        onClick={() => setEstudianteAEditar(e)}
+                        style={{ background: 'rgba(59, 130, 246, 0.15)', border: '1px solid var(--glass-border)', color: 'var(--accent-primary)', cursor: 'pointer', padding: '0.4rem', borderRadius: '6px' }}
+                        title="Editar datos del estudiante"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button 
+                        onClick={() => handleRemoverEstudiante(e.id)}
+                        style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', cursor: 'pointer', padding: '0.4rem', borderRadius: '6px' }}
+                        title="Remover de la lista de hoy"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
             })
           )}
         </div>
+
+        {/* Modal de edición */}
+        {estudianteAEditar && (
+          <ModalEditarEstudiante 
+            estudiante={estudianteAEditar} 
+            onClose={() => setEstudianteAEditar(null)} 
+            onSaved={fetchEstudiantes} 
+          />
+        )}
       </div>
     );
   }
@@ -195,6 +216,15 @@ export default function ListaEstudiantes({ refreshTrigger }) {
           </span>
         </div>
       </div>
+
+      {/* Modal de edición desde vista general si aplica */}
+      {estudianteAEditar && (
+        <ModalEditarEstudiante 
+          estudiante={estudianteAEditar} 
+          onClose={() => setEstudianteAEditar(null)} 
+          onSaved={fetchEstudiantes} 
+        />
+      )}
     </div>
   );
 }
