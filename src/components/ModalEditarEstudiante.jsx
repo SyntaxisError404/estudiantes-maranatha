@@ -49,6 +49,12 @@ export default function ModalEditarEstudiante({ estudiante, onClose, onSaved }) 
     setTelefonoRep(val);
   };
 
+  const extraerTicketOriginal = (repInfo) => {
+    if (!repInfo) return null;
+    const match = repInfo.match(/Ticket:\s*#?([0-9A-Za-z]+)/i);
+    return match ? match[1] : null;
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     setErrorMsg(null);
@@ -56,6 +62,13 @@ export default function ModalEditarEstudiante({ estudiante, onClose, onSaved }) 
 
     try {
       const salonAsignado = edadCalculada >= 13 ? 'Graduado' : 'Usos Múltiples';
+
+      // Preservar el ticket original si existía
+      const ticketOriginal = extraerTicketOriginal(estudiante.nombre_representante);
+      let nombreRepFinal = nombreRep.trim();
+      if (ticketOriginal && !nombreRepFinal.toLowerCase().includes('ticket:')) {
+        nombreRepFinal = `${nombreRepFinal} (Ticket: #${ticketOriginal})`;
+      }
 
       const { error } = await supabase
         .from('estudiantes')
@@ -65,7 +78,7 @@ export default function ModalEditarEstudiante({ estudiante, onClose, onSaved }) 
           genero: genero,
           fecha_nacimiento: fechaNacimiento,
           salon_actual: salonAsignado,
-          nombre_representante: nombreRep.trim(),
+          nombre_representante: nombreRepFinal,
           telefono_representante: telefonoRep.trim()
         })
         .eq('id', estudiante.id);

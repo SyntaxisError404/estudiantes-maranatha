@@ -119,9 +119,9 @@ export default function FormularioIngreso({ onEstudianteAgregado, onGraduacion }
         fecha_nacimiento: fechaNacimiento,
         genero,
         salon_actual: salon,
-        nombre_representante: requiereRepresentante ? nombreRep : null,
-        apellido_representante: requiereRepresentante ? apellidoRep : null,
-        telefono_representante: requiereRepresentante ? telefonoRep : null,
+        nombre_representante: requiereRepresentante ? nombreRep : (estAnterior?.nombre_representante || null),
+        apellido_representante: requiereRepresentante ? apellidoRep : (estAnterior?.apellido_representante || null),
+        telefono_representante: requiereRepresentante ? telefonoRep : (estAnterior?.telefono_representante || null),
         activo_este_domingo: true
       };
 
