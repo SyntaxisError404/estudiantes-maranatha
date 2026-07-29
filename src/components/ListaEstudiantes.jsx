@@ -71,6 +71,12 @@ export default function ListaEstudiantes({ refreshTrigger }) {
     return match ? match[1] : null;
   };
 
+  // Limpiar cadena del representante para quitar la duplicación de Ticket
+  const limpiarNombreRepresentante = (repInfo) => {
+    if (!repInfo) return '';
+    return repInfo.replace(/\s*\|\s*Ticket:\s*#?\w+/i, '').replace(/\s*Ticket:\s*#?\w+/i, '').trim();
+  };
+
   // VISTA NIVEL 2: Detalle de un salón
   if (salonSeleccionado) {
     const lista = agrupados[salonSeleccionado] || [];
@@ -120,6 +126,7 @@ export default function ListaEstudiantes({ refreshTrigger }) {
           ) : (
             lista.map(e => {
               const ticketNum = extraerTicket(e.nombre_representante);
+              const nombreRepLimpio = limpiarNombreRepresentante(e.nombre_representante);
               return (
                 <div key={e.id} className="estudiante-item" style={{ borderLeft: `4px solid ${e.genero === 'Niña' ? '#ec4899' : e.genero === 'Niño' ? 'var(--accent-primary)' : 'var(--text-secondary)'}`, padding: '1rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -133,11 +140,11 @@ export default function ListaEstudiantes({ refreshTrigger }) {
                       <div className="estudiante-nombre" style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{e.nombre} {e.apellido}</div>
                       <div className="estudiante-edad" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{e.edad} años ({e.genero || 'No especificado'})</div>
                       
-                      {e.nombre_representante && (
+                      {nombreRepLimpio && (
                         <div className="estudiante-rep" style={{ marginTop: '0.6rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--glass-border)', padding: '0.5rem', borderRadius: '6px' }}>
                           <div style={{ fontSize: '0.85rem', color: 'white', fontWeight: '500' }}>
                             <ShieldCheck size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px', color: '#fbbf24' }}/>
-                            {e.nombre_representante}
+                            {nombreRepLimpio}
                           </div>
                           {e.telefono_representante && (
                             <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>

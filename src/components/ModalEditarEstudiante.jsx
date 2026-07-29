@@ -19,7 +19,8 @@ export default function ModalEditarEstudiante({ estudiante, onClose, onSaved }) 
   const [apellido, setApellido] = useState(estudiante.apellido || '');
   const [genero, setGenero] = useState(estudiante.genero || 'Niño');
   const [fechaNacimiento, setFechaNacimiento] = useState(estudiante.fecha_nacimiento || '');
-  const [nombreRep, setNombreRep] = useState(estudiante.nombre_representante || '');
+  const limpiarRep = (info) => (info || '').replace(/\s*\|\s*Ticket:\s*#?\w+/i, '').replace(/\s*Ticket:\s*#?\w+/i, '').trim();
+  const [nombreRep, setNombreRep] = useState(limpiarRep(estudiante.nombre_representante));
   const [telefonoRep, setTelefonoRep] = useState(estudiante.telefono_representante || '');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
