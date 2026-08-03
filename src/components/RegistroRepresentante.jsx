@@ -253,61 +253,59 @@ export default function RegistroRepresentante() {
               </div>
             </div>
 
-            <div className="form-responsive-row">
-              <div className="form-group" style={{ marginBottom: '0.8rem' }}>
-                <label style={{ fontSize: '0.85rem' }}>Teléfono de Contacto</label>
-                <div style={{ display: 'flex', gap: '0.4rem' }}>
-                  <select 
-                    value={codigoTelefono} 
-                    onChange={e => setCodigoTelefono(e.target.value)}
-                    style={{ padding: '0.65rem 0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white', fontSize: '0.95rem', fontWeight: 'bold', minWidth: '85px' }}
-                  >
-                    <option value="0414">0414</option>
-                    <option value="0424">0424</option>
-                    <option value="0412">0412</option>
-                    <option value="0422">0422</option>
-                    <option value="0416">0416</option>
-                    <option value="0426">0426</option>
-                  </select>
-                  <input 
-                    type="tel" 
-                    required 
-                    maxLength={7}
-                    value={numeroTelefono} 
-                    onChange={e => setNumeroTelefono(e.target.value.replace(/\D/g, '').slice(0, 7))} 
-                    placeholder="1234567" 
-                    style={{ flex: 1, padding: '0.65rem 0.8rem', fontSize: '0.95rem', letterSpacing: '0.5px' }}
-                  />
-                </div>
-              </div>
-
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label style={{ fontSize: '0.85rem' }}>Parentesco con el niño/a</label>
+            <div className="form-group" style={{ marginBottom: '0.8rem' }}>
+              <label style={{ fontSize: '0.85rem' }}>Teléfono de Contacto</label>
+              <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
                 <select 
-                  value={parentescoRep} 
-                  onChange={e => setParentescoRep(e.target.value)}
-                  style={{ width: '100%', padding: '0.65rem 0.8rem', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white', fontSize: '0.95rem' }}
+                  value={codigoTelefono} 
+                  onChange={e => setCodigoTelefono(e.target.value)}
+                  style={{ width: '95px', minWidth: '95px', flexShrink: 0, padding: '0.65rem 0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white', fontSize: '0.95rem', fontWeight: 'bold' }}
                 >
-                  <option value="Padre">Padre</option>
-                  <option value="Madre">Madre</option>
-                  <option value="Abuelo/a">Abuelo / Abuela</option>
-                  <option value="Tío/a">Tío / Tía</option>
-                  <option value="Hermano/a">Hermano / Hermana</option>
-                  <option value="Tutor Legal">Tutor Legal</option>
-                  <option value="Otro">Otro...</option>
+                  <option value="0414">0414</option>
+                  <option value="0424">0424</option>
+                  <option value="0412">0412</option>
+                  <option value="0422">0422</option>
+                  <option value="0416">0416</option>
+                  <option value="0426">0426</option>
                 </select>
-
-                {parentescoRep === 'Otro' && (
-                  <input 
-                    type="text" 
-                    required 
-                    value={otroParentesco} 
-                    onChange={e => setOtroParentesco(e.target.value)} 
-                    placeholder="Escriba su parentesco" 
-                    style={{ marginTop: '0.5rem', padding: '0.65rem 0.8rem', fontSize: '0.95rem' }}
-                  />
-                )}
+                <input 
+                  type="tel" 
+                  required 
+                  maxLength={7}
+                  value={numeroTelefono} 
+                  onChange={e => setNumeroTelefono(e.target.value.replace(/\D/g, '').slice(0, 7))} 
+                  placeholder="1234567" 
+                  style={{ flex: 1, width: '100%', padding: '0.65rem 0.8rem', fontSize: '0.95rem', letterSpacing: '0.5px' }}
+                />
               </div>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label style={{ fontSize: '0.85rem' }}>Parentesco con el niño/a</label>
+              <select 
+                value={parentescoRep} 
+                onChange={e => setParentescoRep(e.target.value)}
+                style={{ width: '100%', padding: '0.65rem 0.8rem', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white', fontSize: '0.95rem' }}
+              >
+                <option value="Padre">Padre</option>
+                <option value="Madre">Madre</option>
+                <option value="Abuelo/a">Abuelo / Abuela</option>
+                <option value="Tío/a">Tío / Tía</option>
+                <option value="Hermano/a">Hermano / Hermana</option>
+                <option value="Tutor Legal">Tutor Legal</option>
+                <option value="Otro">Otro...</option>
+              </select>
+
+              {parentescoRep === 'Otro' && (
+                <input 
+                  type="text" 
+                  required 
+                  value={otroParentesco} 
+                  onChange={e => setOtroParentesco(e.target.value)} 
+                  placeholder="Escriba su parentesco" 
+                  style={{ marginTop: '0.5rem', padding: '0.65rem 0.8rem', fontSize: '0.95rem' }}
+                />
+              )}
             </div>
           </div>
 

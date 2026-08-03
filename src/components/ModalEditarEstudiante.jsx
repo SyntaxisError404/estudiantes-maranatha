@@ -276,7 +276,7 @@ export default function ModalEditarEstudiante({ estudiante, onClose, onSaved }) 
                 <select 
                   value={codigoTelefono} 
                   onChange={e => setCodigoTelefono(e.target.value)}
-                  style={{ padding: '0.65rem 0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white', fontSize: '0.95rem', fontWeight: 'bold', minWidth: '85px' }}
+                  style={{ width: '95px', minWidth: '95px', flexShrink: 0, padding: '0.65rem 0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white', fontSize: '0.95rem', fontWeight: 'bold' }}
                 >
                   <option value="0414">0414</option>
                   <option value="0424">0424</option>
@@ -291,7 +291,7 @@ export default function ModalEditarEstudiante({ estudiante, onClose, onSaved }) 
                   value={numeroTelefono} 
                   onChange={e => setNumeroTelefono(e.target.value.replace(/\D/g, '').slice(0, 7))} 
                   placeholder="1234567"
-                  style={{ flex: 1, padding: '0.65rem 0.8rem', fontSize: '0.95rem', letterSpacing: '0.5px' }}
+                  style={{ flex: 1, width: '100%', padding: '0.65rem 0.8rem', fontSize: '0.95rem', letterSpacing: '0.5px' }}
                 />
               </div>
             </div>
