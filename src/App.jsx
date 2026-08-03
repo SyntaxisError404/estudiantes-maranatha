@@ -5,6 +5,7 @@ import HistorialDomingos from './components/HistorialDomingos';
 import GraduacionAnimation from './components/GraduacionAnimation';
 import RegistroRepresentante from './components/RegistroRepresentante';
 import ModalCerrarDia from './components/ModalCerrarDia';
+import ModalQR from './components/ModalQR';
 import { Sparkles, Archive, Users, QrCode, UserCheck } from 'lucide-react';
 import { supabase } from './lib/supabase';
 
