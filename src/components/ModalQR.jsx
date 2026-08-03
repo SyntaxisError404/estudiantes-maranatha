@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
 import { X, Copy, ExternalLink, QrCode, Check } from 'lucide-react';
 
 export default function ModalQR({ onClose }) {
   const [copiado, setCopiado] = useState(false);
 
-  // URL del formulario de registro público (limpiar parámetros previos si los hay)
+  // URL del formulario de registro público
   const origin = window.location.origin;
   const pathname = window.location.pathname.endsWith('/') ? window.location.pathname : window.location.pathname + '/';
   const qrUrl = `${origin}${pathname}?registro=true`;
 
-  const fallbackQrImage = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrUrl)}`;
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrUrl)}&margin=10`;
 
   const handleCopiarLink = () => {
     navigator.clipboard.writeText(qrUrl);
@@ -67,37 +66,24 @@ export default function ModalQR({ onClose }) {
           Escanea este código con la cámara de tu teléfono para registrar tus datos y los del niño/a.
         </p>
 
-        {/* QR Code Container con fondo blanco para fácil escaneo */}
+        {/* QR Code Container */}
         <div style={{
           background: 'white',
-          padding: '1.2rem',
+          padding: '1rem',
           borderRadius: '16px',
           display: 'inline-flex',
           justifyContent: 'center',
           alignItems: 'center',
           marginBottom: '1.5rem',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-          minWidth: '220px',
-          minHeight: '220px'
+          boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
         }}>
-          {QRCodeSVG ? (
-            <QRCodeSVG 
-              value={qrUrl} 
-              size={220} 
-              level="H" 
-              marginSize={2}
-              fgColor="#000000"
-              bgColor="#ffffff"
-            />
-          ) : (
-            <img 
-              src={fallbackQrImage} 
-              alt="Código QR de Registro" 
-              width={220} 
-              height={220} 
-              style={{ display: 'block' }}
-            />
-          )}
+          <img 
+            src={qrImageUrl} 
+            alt="Código QR para Registro" 
+            width={220} 
+            height={220} 
+            style={{ display: 'block', borderRadius: '8px' }}
+          />
         </div>
 
         <p style={{ fontSize: '0.85rem', color: 'var(--accent-primary)', fontWeight: 'bold', marginBottom: '1.2rem' }}>
