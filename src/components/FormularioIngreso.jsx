@@ -3,11 +3,17 @@ import { supabase } from '../lib/supabase';
 import { Search } from 'lucide-react';
 
 function calcularEdad(fechaString) {
+  if (!fechaString) return 0;
+  const partes = fechaString.split('-');
+  if (partes.length !== 3) return 0;
+  const anio = parseInt(partes[0], 10);
+  const mes = parseInt(partes[1], 10) - 1;
+  const dia = parseInt(partes[2], 10);
+
   const hoy = new Date();
-  const cumple = new Date(fechaString);
-  let edad = hoy.getFullYear() - cumple.getFullYear();
-  const m = hoy.getMonth() - cumple.getMonth();
-  if (m < 0 || (m === 0 && hoy.getDate() < cumple.getDate())) {
+  let edad = hoy.getFullYear() - anio;
+  const m = hoy.getMonth() - mes;
+  if (m < 0 || (m === 0 && hoy.getDate() < dia)) {
     edad--;
   }
   return edad;
@@ -258,7 +264,6 @@ export default function FormularioIngreso({ onEstudianteAgregado, onGraduacion }
           <input 
             type="date" 
             required 
-            min="2014-01-01" 
             max={`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`}
             value={fechaNacimiento} 
             onChange={e => setFechaNacimiento(e.target.value)} 

@@ -1,20 +1,25 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Sparkles, User, ShieldCheck, Heart, Plus, AlertCircle } from 'lucide-react';
+import { Sparkles, User, ShieldCheck, Heart, Plus, AlertCircle, ChevronLeft } from 'lucide-react';
 
 function calcularEdad(fechaString) {
   if (!fechaString) return 0;
+  const partes = fechaString.split('-');
+  if (partes.length !== 3) return 0;
+  const anio = parseInt(partes[0], 10);
+  const mes = parseInt(partes[1], 10) - 1;
+  const dia = parseInt(partes[2], 10);
+
   const hoy = new Date();
-  const cumple = new Date(fechaString);
-  let edad = hoy.getFullYear() - cumple.getFullYear();
-  const m = hoy.getMonth() - cumple.getMonth();
-  if (m < 0 || (m === 0 && hoy.getDate() < cumple.getDate())) {
+  let edad = hoy.getFullYear() - anio;
+  const m = hoy.getMonth() - mes;
+  if (m < 0 || (m === 0 && hoy.getDate() < dia)) {
     edad--;
   }
   return edad;
 }
 
-export default function RegistroRepresentante() {
+export default function RegistroRepresentante({ onVolverAlPanel }) {
   // Datos del representante
   const [nombreRep, setNombreRep] = useState('');
   const [apellidoRep, setApellidoRep] = useState('');
@@ -203,6 +208,15 @@ export default function RegistroRepresentante() {
 
   return (
     <div style={{ maxWidth: '500px', margin: '1rem auto', padding: '0 0.5rem', animation: 'fadeIn 0.3s ease-out' }}>
+      {onVolverAlPanel && (
+        <button 
+          onClick={onVolverAlPanel}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', marginBottom: '1rem', fontSize: '0.95rem', fontWeight: 600 }}
+        >
+          <ChevronLeft size={20} /> Volver al Panel Principal
+        </button>
+      )}
+
       <div className="glass-panel" style={{ padding: '1.25rem 1rem' }}>
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <div style={{ display: 'inline-flex', padding: '10px', background: 'rgba(59, 130, 246, 0.15)', borderRadius: '50%', marginBottom: '0.6rem' }}>
@@ -373,7 +387,6 @@ export default function RegistroRepresentante() {
                 <input 
                   type="date" 
                   required 
-                  min="2014-01-01"
                   max={fechaHoy}
                   value={fechaNacimientoEst} 
                   onChange={e => setFechaNacimientoEst(e.target.value)} 
