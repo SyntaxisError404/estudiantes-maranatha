@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Folder, ChevronLeft, Calendar, Trash2 } from 'lucide-react';
+import ModalConfirmacion from './ModalConfirmacion';
 
 export default function HistorialDomingos() {
   const [historial, setHistorial] = useState([]);
   const [loading, setLoading] = useState(true);
   const [carpetaSeleccionada, setCarpetaSeleccionada] = useState(null);
+  const [registroAEliminar, setRegistroAEliminar] = useState(null);
+  const [isEliminando, setIsEliminando] = useState(false);
 
   useEffect(() => {
     fetchHistorial();
@@ -50,18 +53,24 @@ export default function HistorialDomingos() {
     setLoading(false);
   };
 
-  const handleEliminarCarpeta = async (e, registro) => {
-    e.stopPropagation(); // Evitar abrir la carpeta
-    if (window.confirm(`¿Estás seguro de que quieres eliminar el registro de asistencia del ${formatearFecha(registro.fecha)}?`)) {
-      const idsAEliminar = registro.ids || [registro.id];
-      const { error } = await supabase.from('historial_domingos').delete().in('id', idsAEliminar);
-      if (error) {
-        console.error('Error deleting:', error);
-        alert('Hubo un error al eliminar el registro.');
-      } else {
-        fetchHistorial();
-      }
+  const handleAbrirEliminar = (e, registro) => {
+    e.stopPropagation();
+    setRegistroAEliminar(registro);
+  };
+
+  const handleConfirmarEliminar = async () => {
+    if (!registroAEliminar) return;
+    setIsEliminando(true);
+    const idsAEliminar = registroAEliminar.ids || [registroAEliminar.id];
+    const { error } = await supabase.from('historial_domingos').delete().in('id', idsAEliminar);
+    if (error) {
+      console.error('Error deleting:', error);
+      alert('Hubo un error al eliminar el registro.');
+    } else {
+      setRegistroAEliminar(null);
+      fetchHistorial();
     }
+    setIsEliminando(false);
   };
 
   const formatearFecha = (fechaISO) => {
@@ -171,7 +180,7 @@ export default function HistorialDomingos() {
               <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}>
                 <Folder color="var(--accent-primary)" size={48} style={{ marginBottom: '0.5rem' }} />
                 <button
-                  onClick={(e) => handleEliminarCarpeta(e, registro)}
+                  onClick={(e) => handleAbrirEliminar(e, registro)}
                   style={{ 
                     position: 'absolute', top: '-10px', right: '-10px', 
                     background: 'rgba(239, 68, 68, 0.2)', border: 'none', 
@@ -192,6 +201,18 @@ export default function HistorialDomingos() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Modal Personalizado de Confirmación de Eliminación */}
+      {registroAEliminar && (
+        <ModalConfirmacion 
+          titulo="¿Eliminar Registro de Asistencia?"
+          mensaje={`¿Estás seguro de que deseas eliminar permanentemente la carpeta del ${formatearFecha(registroAEliminar.fecha)} con ${(registroAEliminar.estudiantes || []).length} estudiantes?`}
+          textoBotonConfirmar="Sí, Eliminar"
+          onCancelar={() => setRegistroAEliminar(null)}
+          onConfirmar={handleConfirmarEliminar}
+          isCargando={isEliminando}
+        />
       )}
     </div>
   );

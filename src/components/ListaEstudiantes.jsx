@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Users, ShieldCheck, Trash2, Folder, ChevronLeft, Search, Ticket, Phone, Pencil } from 'lucide-react';
 import ModalEditarEstudiante from './ModalEditarEstudiante';
+import ModalConfirmacion from './ModalConfirmacion';
 
 export default function ListaEstudiantes({ refreshTrigger }) {
   const [estudiantes, setEstudiantes] = useState([]);
@@ -9,6 +10,8 @@ export default function ListaEstudiantes({ refreshTrigger }) {
   const [salonSeleccionado, setSalonSeleccionado] = useState(null);
   const [busqueda, setBusqueda] = useState('');
   const [estudianteAEditar, setEstudianteAEditar] = useState(null);
+  const [estudianteARemover, setEstudianteARemover] = useState(null);
+  const [isRemoviendo, setIsRemoviendo] = useState(false);
 
   useEffect(() => {
     fetchEstudiantes();
@@ -30,20 +33,22 @@ export default function ListaEstudiantes({ refreshTrigger }) {
     setLoading(false);
   };
 
-  const handleRemoverEstudiante = async (id) => {
-    if (window.confirm('¿Deseas remover a este estudiante de la asistencia de hoy?')) {
-      const { error } = await supabase
-        .from('estudiantes')
-        .update({ activo_este_domingo: false })
-        .eq('id', id);
-      
-      if (error) {
-        console.error('Error removing student:', error);
-        alert('Hubo un error al remover al estudiante.');
-      } else {
-        fetchEstudiantes();
-      }
+  const handleConfirmarRemover = async () => {
+    if (!estudianteARemover) return;
+    setIsRemoviendo(true);
+    const { error } = await supabase
+      .from('estudiantes')
+      .update({ activo_este_domingo: false })
+      .eq('id', estudianteARemover.id);
+    
+    if (error) {
+      console.error('Error removing student:', error);
+      alert('Hubo un error al remover al estudiante.');
+    } else {
+      setEstudianteARemover(null);
+      fetchEstudiantes();
     }
+    setIsRemoviendo(false);
   };
 
   // Filtrar estudiantes por término de búsqueda (Ticket #, Nombre, Cédula, Representante)
@@ -165,7 +170,7 @@ export default function ListaEstudiantes({ refreshTrigger }) {
                         <Pencil size={16} />
                       </button>
                       <button 
-                        onClick={() => handleRemoverEstudiante(e.id)}
+                        onClick={() => setEstudianteARemover(e)}
                         style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', cursor: 'pointer', padding: '0.4rem', borderRadius: '6px' }}
                         title="Remover de la lista de hoy"
                       >
@@ -230,6 +235,18 @@ export default function ListaEstudiantes({ refreshTrigger }) {
           estudiante={estudianteAEditar} 
           onClose={() => setEstudianteAEditar(null)} 
           onSaved={fetchEstudiantes} 
+        />
+      )}
+
+      {/* Modal de confirmación para remover estudiante de la lista de hoy */}
+      {estudianteARemover && (
+        <ModalConfirmacion 
+          titulo="¿Remover Estudiante?"
+          mensaje={`¿Estás seguro de que deseas remover a ${estudianteARemover.nombre} ${estudianteARemover.apellido} de la asistencia de hoy?`}
+          textoBotonConfirmar="Sí, Remover"
+          onCancelar={() => setEstudianteARemover(null)}
+          onConfirmar={handleConfirmarRemover}
+          isCargando={isRemoviendo}
         />
       )}
     </div>
