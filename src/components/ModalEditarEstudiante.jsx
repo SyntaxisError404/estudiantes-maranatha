@@ -21,7 +21,22 @@ export default function ModalEditarEstudiante({ estudiante, onClose, onSaved }) 
   const [fechaNacimiento, setFechaNacimiento] = useState(estudiante.fecha_nacimiento || '');
   const limpiarRep = (info) => (info || '').replace(/\s*\|\s*Ticket:\s*#?\w+/i, '').replace(/\s*Ticket:\s*#?\w+/i, '').trim();
   const [nombreRep, setNombreRep] = useState(limpiarRep(estudiante.nombre_representante));
-  const [telefonoRep, setTelefonoRep] = useState(estudiante.telefono_representante || '');
+  const parseTelefono = (tel) => {
+    const raw = (tel || '').replace(/\D/g, '');
+    const codigosValidos = ['0414', '0424', '0412', '0422', '0416', '0426'];
+    const prefix = codigosValidos.find(c => raw.startsWith(c));
+    if (prefix) {
+      return { codigo: prefix, numero: raw.slice(4, 11) };
+    }
+    if (raw.startsWith('04') && raw.length >= 4) {
+      return { codigo: raw.slice(0, 4), numero: raw.slice(4, 11) };
+    }
+    return { codigo: '0414', numero: raw.slice(0, 7) };
+  };
+
+  const initialTel = parseTelefono(estudiante.telefono_representante);
+  const [codigoTelefono, setCodigoTelefono] = useState(initialTel.codigo);
+  const [numeroTelefono, setNumeroTelefono] = useState(initialTel.numero);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -85,6 +100,13 @@ export default function ModalEditarEstudiante({ estudiante, onClose, onSaved }) 
         return;
       }
 
+      if (numeroTelefono && numeroTelefono.length !== 7) {
+        setErrorMsg('El número de teléfono debe tener los 7 dígitos completos después del código (Ej. 0414 + 1234567).');
+        setIsSubmitting(false);
+        return;
+      }
+
+      const telefonoFinal = numeroTelefono ? `${codigoTelefono}${numeroTelefono}` : '';
       const salonAsignado = 'Usos Múltiples';
 
       // Preservar el ticket original si existía
@@ -103,7 +125,7 @@ export default function ModalEditarEstudiante({ estudiante, onClose, onSaved }) 
           fecha_nacimiento: fechaNacimiento,
           salon_actual: salonAsignado,
           nombre_representante: nombreRepFinal,
-          telefono_representante: telefonoRep.trim()
+          telefono_representante: telefonoFinal
         })
         .eq('id', estudiante.id);
 
@@ -250,13 +272,28 @@ export default function ModalEditarEstudiante({ estudiante, onClose, onSaved }) 
 
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label style={{ fontSize: '0.85rem' }}>Teléfono de Contacto</label>
-              <input 
-                type="tel" 
-                maxLength={11}
-                value={telefonoRep} 
-                onChange={handleTelefonoChange} 
-                placeholder="Ej. 04141234567"
-              />
+              <div style={{ display: 'flex', gap: '0.4rem' }}>
+                <select 
+                  value={codigoTelefono} 
+                  onChange={e => setCodigoTelefono(e.target.value)}
+                  style={{ padding: '0.65rem 0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white', fontSize: '0.95rem', fontWeight: 'bold', minWidth: '85px' }}
+                >
+                  <option value="0414">0414</option>
+                  <option value="0424">0424</option>
+                  <option value="0412">0412</option>
+                  <option value="0422">0422</option>
+                  <option value="0416">0416</option>
+                  <option value="0426">0426</option>
+                </select>
+                <input 
+                  type="tel" 
+                  maxLength={7}
+                  value={numeroTelefono} 
+                  onChange={e => setNumeroTelefono(e.target.value.replace(/\D/g, '').slice(0, 7))} 
+                  placeholder="1234567"
+                  style={{ flex: 1, padding: '0.65rem 0.8rem', fontSize: '0.95rem', letterSpacing: '0.5px' }}
+                />
+              </div>
             </div>
           </div>
 
