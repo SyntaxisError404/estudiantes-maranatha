@@ -53,12 +53,37 @@ function App() {
         return;
       }
 
-      // 2. Guardar en historial_domingos
-      const { error: errInsert } = await supabase
+      // 2. Guardar o actualizar en historial_domingos
+      const hoyISO = new Date().toISOString().split('T')[0];
+      const { data: existentes } = await supabase
         .from('historial_domingos')
-        .insert([{ estudiantes: activos }]);
-      
-      if (errInsert) throw errInsert;
+        .select('*')
+        .eq('fecha', hoyISO);
+
+      if (existentes && existentes.length > 0) {
+        const regExistente = existentes[0];
+        const estsExistentes = regExistente.estudiantes || [];
+        const estsCombinados = [...estsExistentes];
+
+        activos.forEach(nuevoEst => {
+          if (!estsCombinados.some(e => e.id === nuevoEst.id || (e.nombre === nuevoEst.nombre && e.apellido === nuevoEst.apellido))) {
+            estsCombinados.push(nuevoEst);
+          }
+        });
+
+        const { error: errUpdateHist } = await supabase
+          .from('historial_domingos')
+          .update({ estudiantes: estsCombinados })
+          .eq('id', regExistente.id);
+
+        if (errUpdateHist) throw errUpdateHist;
+      } else {
+        const { error: errInsert } = await supabase
+          .from('historial_domingos')
+          .insert([{ fecha: hoyISO, estudiantes: activos }]);
+
+        if (errInsert) throw errInsert;
+      }
 
       // 3. Desactivar a todos los estudiantes (activo_este_domingo = false)
       const { error: errUpdate } = await supabase

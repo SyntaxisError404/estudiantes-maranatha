@@ -21,15 +21,40 @@ export default function HistorialDomingos() {
     if (error) {
       console.error('Error fetching historial:', error);
     } else {
-      setHistorial(data || []);
+      // Agrupar registros por fecha (YYYY-MM-DD) para consolidar carpetas del mismo día
+      const agrupadosPorFecha = {};
+
+      (data || []).forEach(item => {
+        const fechaClave = item.fecha ? item.fecha.split('T')[0] : 'Sin fecha';
+        if (!agrupadosPorFecha[fechaClave]) {
+          agrupadosPorFecha[fechaClave] = {
+            id: item.id,
+            ids: [item.id],
+            fecha: fechaClave,
+            estudiantes: []
+          };
+        } else {
+          agrupadosPorFecha[fechaClave].ids.push(item.id);
+        }
+
+        const listEst = item.estudiantes || [];
+        listEst.forEach(est => {
+          if (!agrupadosPorFecha[fechaClave].estudiantes.some(e => e.id === est.id || (e.nombre === est.nombre && e.apellido === est.apellido))) {
+            agrupadosPorFecha[fechaClave].estudiantes.push(est);
+          }
+        });
+      });
+
+      setHistorial(Object.values(agrupadosPorFecha));
     }
     setLoading(false);
   };
 
-  const handleEliminarCarpeta = async (e, id) => {
+  const handleEliminarCarpeta = async (e, registro) => {
     e.stopPropagation(); // Evitar abrir la carpeta
-    if (window.confirm('¿Estás seguro de que quieres eliminar este registro de asistencia?')) {
-      const { error } = await supabase.from('historial_domingos').delete().eq('id', id);
+    if (window.confirm(`¿Estás seguro de que quieres eliminar el registro de asistencia del ${formatearFecha(registro.fecha)}?`)) {
+      const idsAEliminar = registro.ids || [registro.id];
+      const { error } = await supabase.from('historial_domingos').delete().in('id', idsAEliminar);
       if (error) {
         console.error('Error deleting:', error);
         alert('Hubo un error al eliminar el registro.');
@@ -146,7 +171,7 @@ export default function HistorialDomingos() {
               <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}>
                 <Folder color="var(--accent-primary)" size={48} style={{ marginBottom: '0.5rem' }} />
                 <button
-                  onClick={(e) => handleEliminarCarpeta(e, registro.id)}
+                  onClick={(e) => handleEliminarCarpeta(e, registro)}
                   style={{ 
                     position: 'absolute', top: '-10px', right: '-10px', 
                     background: 'rgba(239, 68, 68, 0.2)', border: 'none', 
