@@ -4,7 +4,7 @@ import ListaEstudiantes from './components/ListaEstudiantes';
 import HistorialDomingos from './components/HistorialDomingos';
 import GraduacionAnimation from './components/GraduacionAnimation';
 import RegistroRepresentante from './components/RegistroRepresentante';
-import ModalQR from './components/ModalQR';
+import ModalCerrarDia from './components/ModalCerrarDia';
 import { Sparkles, Archive, Users, QrCode, UserCheck } from 'lucide-react';
 import { supabase } from './lib/supabase';
 
@@ -14,6 +14,7 @@ function App() {
   const [isCerrando, setIsCerrando] = useState(false);
   const [graduacionData, setGraduacionData] = useState(null);
   const [mostrarModalQR, setMostrarModalQR] = useState(false);
+  const [modalCerrarData, setModalCerrarData] = useState(null); // { activos: [...] }
 
   // Detectar si se ingresó directamente por escaneo de código QR (URL con ?registro=true o #registro)
   useEffect(() => {
@@ -32,11 +33,7 @@ function App() {
     setGraduacionData(data);
   };
 
-  const handleCerrarDomingo = async () => {
-    if (!window.confirm('¿Estás seguro de que quieres cerrar el registro de este día? Esto guardará la asistencia actual en una carpeta y limpiará la lista principal para el próximo día.')) {
-      return;
-    }
-
+  const handleAbrirCerrarDomingo = async () => {
     setIsCerrando(true);
     try {
       // 1. Obtener todos los estudiantes que están activos este domingo
@@ -53,12 +50,26 @@ function App() {
         return;
       }
 
-      // 2. Guardar o actualizar en historial_domingos
-      const hoyISO = new Date().toISOString().split('T')[0];
+      setModalCerrarData({ activos });
+    } catch (error) {
+      console.error(error);
+      alert('Error al consultar lista de estudiantes: ' + error.message);
+    }
+    setIsCerrando(false);
+  };
+
+  const handleConfirmarCierreDia = async (fechaCierre) => {
+    if (!modalCerrarData || !modalCerrarData.activos) return;
+
+    setIsCerrando(true);
+    try {
+      const activos = modalCerrarData.activos;
+
+      // 2. Guardar o actualizar en historial_domingos con la fecha seleccionada por el usuario
       const { data: existentes } = await supabase
         .from('historial_domingos')
         .select('*')
-        .eq('fecha', hoyISO);
+        .eq('fecha', fechaCierre);
 
       if (existentes && existentes.length > 0) {
         const regExistente = existentes[0];
@@ -80,7 +91,7 @@ function App() {
       } else {
         const { error: errInsert } = await supabase
           .from('historial_domingos')
-          .insert([{ fecha: hoyISO, estudiantes: activos }]);
+          .insert([{ fecha: fechaCierre, estudiantes: activos }]);
 
         if (errInsert) throw errInsert;
       }
@@ -93,7 +104,8 @@ function App() {
       
       if (errUpdate) throw errUpdate;
 
-      alert('¡Día cerrado correctamente! Los datos se han guardado en el historial.');
+      alert(`¡Día cerrado correctamente para la fecha ${fechaCierre}! Los datos se han guardado en el historial.`);
+      setModalCerrarData(null);
       setRefreshTrigger(prev => prev + 1);
 
     } catch (error) {
@@ -192,11 +204,11 @@ function App() {
                   Actualizar
                 </button>
                 <button 
-                  onClick={handleCerrarDomingo} 
+                  onClick={handleAbrirCerrarDomingo} 
                   disabled={isCerrando}
                   style={{ background: 'var(--accent-gradient)', border: 'none', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', cursor: isCerrando ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}
                 >
-                  {isCerrando ? 'Cerrando...' : 'Cerrar Día'}
+                  {isCerrando ? 'Cargando...' : 'Cerrar Día'}
                 </button>
               </div>
             </div>
@@ -207,6 +219,16 @@ function App() {
         <main style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <HistorialDomingos />
         </main>
+      )}
+
+      {/* Modal Cerrar Día con Selección/Edición de Fecha */}
+      {modalCerrarData && (
+        <ModalCerrarDia 
+          totalEstudiantes={modalCerrarData.activos.length}
+          onClose={() => setModalCerrarData(null)}
+          onConfirmar={handleConfirmarCierreDia}
+          isCerrando={isCerrando}
+        />
       )}
 
       {/* Modal QR Code */}
