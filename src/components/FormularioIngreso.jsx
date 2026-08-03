@@ -48,12 +48,12 @@ export default function FormularioIngreso({ onEstudianteAgregado, onGraduacion }
     if (fechaNacimiento) {
       const e = calcularEdad(fechaNacimiento);
       setEdad(e);
-      if (e >= 8 && e <= 12) {
+      if (e >= 8 && e <= 13) {
         setSalon('Usos Múltiples');
-      } else if (e >= 13) {
-        setSalon('Graduado');
+      } else if (e > 13) {
+        setSalon('Excede límite (Mayor a 13 años)');
       } else {
-        setSalon('No apto (menor de 8)');
+        setSalon('No apto (Menor de 8 años)');
       }
     } else {
       setEdad(null);
@@ -98,6 +98,10 @@ export default function FormularioIngreso({ onEstudianteAgregado, onGraduacion }
     e.preventDefault();
     if (edad < 8) {
       setMessage({ type: 'error', text: 'El niño debe tener al menos 8 años.' });
+      return;
+    }
+    if (edad > 13) {
+      setMessage({ type: 'error', text: 'El niño no puede tener más de 13 años (Límite: 13 años).' });
       return;
     }
 
@@ -262,12 +266,17 @@ export default function FormularioIngreso({ onEstudianteAgregado, onGraduacion }
         </div>
 
         {edad !== null && (
-          <div style={{ padding: '1rem', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '8px', marginBottom: '1.5rem' }}>
+          <div style={{ padding: '1rem', background: (edad < 8 || edad > 13) ? 'rgba(239, 68, 68, 0.15)' : 'rgba(59, 130, 246, 0.1)', borderRadius: '8px', marginBottom: '1.5rem' }}>
             <p><strong>Edad calculada:</strong> {edad} años</p>
             <p><strong>Salón asignado:</strong> {salon}</p>
-            {edad >= 13 && (
-              <p style={{ color: '#fbbf24', marginTop: '0.5rem', fontSize: '0.9rem', fontWeight: 'bold' }}>
-                🎓 Este estudiante tiene 13+ años y se considera graduado del programa Maranatha Kids.
+            {edad > 13 && (
+              <p style={{ color: '#ef4444', marginTop: '0.5rem', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                ⚠️ El niño no puede tener más de 13 años. El límite de edad permitido es de máximo 13 años.
+              </p>
+            )}
+            {edad < 8 && (
+              <p style={{ color: '#ef4444', marginTop: '0.5rem', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                ⚠️ El niño debe tener al menos 8 años.
               </p>
             )}
           </div>
@@ -291,7 +300,7 @@ export default function FormularioIngreso({ onEstudianteAgregado, onGraduacion }
           </div>
         )}
 
-        <button type="submit" className="btn-primary" disabled={isSubmitting || (edad !== null && edad < 8)}>
+        <button type="submit" className="btn-primary" disabled={isSubmitting || (edad !== null && (edad < 8 || edad > 13))}>
           {isSubmitting ? 'Guardando...' : (estudianteSeleccionadoId ? 'Registrar Asistencia' : 'Registrar Nuevo Estudiante')}
         </button>
       </form>

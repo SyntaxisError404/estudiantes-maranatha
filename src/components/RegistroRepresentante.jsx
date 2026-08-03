@@ -81,6 +81,11 @@ export default function RegistroRepresentante() {
       return;
     }
 
+    if (edad > 13) {
+      setErrorMsg('El niño no puede tener más de 13 años (Límite máximo permitido: 13 años).');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -89,7 +94,7 @@ export default function RegistroRepresentante() {
       if (!ticketSesion) {
         setTicketSesion(numTicket);
       }
-      const salonAsignado = edad >= 13 ? 'Graduado' : 'Usos Múltiples';
+      const salonAsignado = 'Usos Múltiples';
 
       // Formatear la cadena del representante para incluir Parentesco y Ticket
       const infoRepresentanteFormateada = `${nombreRep.trim()} ${apellidoRep.trim()} (${parentescoFinal} | Ticket: #${numTicket})`;
@@ -387,11 +392,16 @@ export default function RegistroRepresentante() {
             </div>
 
             {fechaNacimientoEst && (
-              <div style={{ marginTop: '0.8rem', padding: '0.6rem', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '8px', fontSize: '0.85rem' }}>
+              <div style={{ marginTop: '0.8rem', padding: '0.6rem', background: (edad < 8 || edad > 13) ? 'rgba(239, 68, 68, 0.15)' : 'rgba(59, 130, 246, 0.1)', borderRadius: '8px', fontSize: '0.85rem' }}>
                 <p style={{ margin: 0 }}><strong>Edad calculada:</strong> {edad} años</p>
                 <p style={{ margin: '0.2rem 0 0 0' }}>
-                  <strong>Salón asignado:</strong> {edad >= 13 ? '🎓 Graduado' : (edad >= 8 ? 'Usos Múltiples' : 'Menor de 8 años')}
+                  <strong>Salón asignado:</strong> {edad > 13 ? '❌ Excede límite (Mayor a 13 años)' : (edad >= 8 ? 'Usos Múltiples' : 'Menor de 8 años')}
                 </p>
+                {edad > 13 && (
+                  <p style={{ color: '#ef4444', marginTop: '0.3rem', margin: '0.3rem 0 0 0', fontWeight: 'bold' }}>
+                    ⚠️ El límite de edad permitido es de máximo 13 años.
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -399,7 +409,7 @@ export default function RegistroRepresentante() {
           <button 
             type="submit" 
             className="btn-primary" 
-            disabled={isSubmitting || telefonoRep.length !== 11 || (fechaNacimientoEst && edad < 8)}
+            disabled={isSubmitting || telefonoRep.length !== 11 || (fechaNacimientoEst && (edad < 8 || edad > 13))}
             style={{ width: '100%', padding: '0.9rem', fontSize: '1rem', fontWeight: 'bold' }}
           >
             {isSubmitting ? 'Generando Turno...' : 'Obtener Número de Turno'}

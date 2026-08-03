@@ -55,12 +55,10 @@ export default function HistorialDomingos() {
   if (carpetaSeleccionada) {
     const estudiantes = carpetaSeleccionada.estudiantes || [];
     
-    // Agrupar
-    const agrupados = {
-      'Comedor': estudiantes.filter(e => e.salon_actual === 'Comedor'),
-      'Usos Múltiples': estudiantes.filter(e => e.salon_actual === 'Usos Múltiples'),
-      'Principal': estudiantes.filter(e => e.salon_actual === 'Principal')
-    };
+    // Solo mostramos Usos Múltiples ya que se eliminaron los otros salones
+    const lista = estudiantes;
+    const ninos = lista.filter(e => e.genero === 'Niño').length;
+    const ninas = lista.filter(e => e.genero === 'Niña').length;
 
     return (
       <div className="glass-panel" style={{ animation: 'fadeIn 0.3s ease-out' }}>
@@ -71,31 +69,34 @@ export default function HistorialDomingos() {
           <ChevronLeft size={20} /> Volver a las carpetas
         </button>
 
-        <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-          <Folder color="var(--accent-primary)" size={28} />
-          Asistencia del {formatearFecha(carpetaSeleccionada.fecha)}
-        </h2>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+            <Folder color="var(--accent-primary)" size={28} />
+            Asistencia del {formatearFecha(carpetaSeleccionada.fecha)} — Usos Múltiples
+          </h2>
+          <span className="salon-badge" style={{ fontSize: '1rem', padding: '0.5rem 1rem' }}>
+            Total: {lista.length} | {ninos} Niños | {ninas} Niñas
+          </span>
+        </div>
 
-        <div className="salones-grid">
-          {Object.entries(agrupados).map(([salon, lista]) => (
-            <div key={salon} className="glass-panel salon-card" style={{ padding: '1rem' }}>
-              <div className="salon-header" style={{ marginBottom: '1rem' }}>
-                <h3 style={{ fontSize: '1.1rem' }}>{salon}</h3>
-                <span className="salon-badge">{lista.length}</span>
-              </div>
-              <div className="salon-list">
-                {lista.length === 0 ? (
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', textAlign: 'center' }}>No hubo asistencia</p>
-                ) : (
-                  lista.map(e => (
-                    <div key={e.id} className="estudiante-item">
-                      <div className="estudiante-nombre">{e.nombre} {e.apellido}</div>
-                    </div>
-                  ))
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+          {lista.length === 0 ? (
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', gridColumn: '1 / -1', textAlign: 'center' }}>
+              No hubo asistencia registrada en este domingo.
+            </p>
+          ) : (
+            lista.map(e => (
+              <div key={e.id || e.nombre + e.apellido} className="estudiante-item" style={{ borderLeft: `4px solid ${e.genero === 'Niña' ? '#ec4899' : e.genero === 'Niño' ? 'var(--accent-primary)' : 'var(--text-secondary)'}`, padding: '1rem' }}>
+                <div className="estudiante-nombre" style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{e.nombre} {e.apellido}</div>
+                {e.edad && <div className="estudiante-edad" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{e.edad} años ({e.genero || 'No especificado'})</div>}
+                {e.nombre_representante && (
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.4rem' }}>
+                    Representante: {e.nombre_representante}
+                  </div>
                 )}
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     );
