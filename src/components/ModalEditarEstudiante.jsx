@@ -25,6 +25,19 @@ export default function ModalEditarEstudiante({ estudiante, onClose, onSaved }) 
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [mostrarConfirmarEliminar, setMostrarConfirmarEliminar] = useState(false);
+
+  const handleEliminarDefinitivo = async () => {
+    setIsSubmitting(true);
+    const { error } = await supabase.from('estudiantes').delete().eq('id', estudiante.id);
+    if (error) {
+      setErrorMsg('Error al eliminar estudiante: ' + error.message);
+      setIsSubmitting(false);
+    } else {
+      onSaved();
+      onClose();
+    }
+  };
 
   const hoyObj = new Date();
   const fechaHoy = `${hoyObj.getFullYear()}-${String(hoyObj.getMonth() + 1).padStart(2, '0')}-${String(hoyObj.getDate()).padStart(2, '0')}`;
@@ -248,24 +261,46 @@ export default function ModalEditarEstudiante({ estudiante, onClose, onSaved }) 
           </div>
 
           {/* Botones */}
-          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
-            <button 
-              type="button" 
-              onClick={onClose}
-              style={{ background: 'transparent', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', padding: '0.75rem 1.2rem', borderRadius: '8px', cursor: 'pointer' }}
+          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => setMostrarConfirmarEliminar(true)}
+              style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', padding: '0.75rem 1rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem' }}
             >
-              Cancelar
+              <Trash2 size={16} /> Eliminar Estudiante
             </button>
-            <button 
-              type="submit" 
-              className="btn-primary" 
-              disabled={isSubmitting}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'auto', padding: '0.75rem 1.5rem', marginTop: 0 }}
-            >
-              <Save size={18} /> {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
-            </button>
+
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button 
+                type="button" 
+                onClick={onClose}
+                style={{ background: 'transparent', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', padding: '0.75rem 1.2rem', borderRadius: '8px', cursor: 'pointer' }}
+              >
+                Cancelar
+              </button>
+              <button 
+                type="submit" 
+                className="btn-primary" 
+                disabled={isSubmitting}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'auto', padding: '0.75rem 1.5rem', marginTop: 0 }}
+              >
+                <Save size={18} /> {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
+              </button>
+            </div>
           </div>
         </form>
+
+        {/* Modal de confirmación para eliminar estudiante permanentemente */}
+        {mostrarConfirmarEliminar && (
+          <ModalConfirmacion 
+            titulo="¿Eliminar Estudiante Definitivamente?"
+            mensaje={`¿Estás seguro de que deseas eliminar permanentemente a ${nombre} ${apellido} del sistema?`}
+            textoBotonConfirmar="Sí, Eliminar Definitivamente"
+            onCancelar={() => setMostrarConfirmarEliminar(false)}
+            onConfirmar={handleEliminarDefinitivo}
+            isCargando={isSubmitting}
+          />
+        )}
       </div>
     </div>
   );
