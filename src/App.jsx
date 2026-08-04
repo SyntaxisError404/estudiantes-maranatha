@@ -16,6 +16,7 @@ function App() {
   const [graduacionData, setGraduacionData] = useState(null);
   const [mostrarModalQR, setMostrarModalQR] = useState(false);
   const [modalCerrarData, setModalCerrarData] = useState(null); // { activos: [...] }
+  const [esPublico, setEsPublico] = useState(false);
 
   // Detectar si se ingresó directamente por escaneo de código QR (URL con ?registro=true o #registro)
   useEffect(() => {
@@ -23,6 +24,7 @@ function App() {
     const hasRegistroParam = searchParams.get('registro') === 'true' || window.location.hash === '#registro';
     if (hasRegistroParam) {
       setVistaActiva('registro-qr');
+      setEsPublico(true);
     }
   }, []);
 
@@ -120,7 +122,7 @@ function App() {
   if (vistaActiva === 'registro-qr') {
     return (
       <div className="container">
-        <RegistroRepresentante onVolverAlPanel={() => setVistaActiva('principal')} />
+        <RegistroRepresentante onVolverAlPanel={esPublico ? null : () => setVistaActiva('principal')} />
       </div>
     );
   }
