@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Sparkles, User, ShieldCheck, Heart, Plus, AlertCircle, ChevronLeft } from 'lucide-react';
+import CampoFechaNacimiento from './CampoFechaNacimiento';
 
 function calcularEdad(fechaString) {
   if (!fechaString) return 0;
@@ -397,15 +398,11 @@ export default function RegistroRepresentante({ onVolverAlPanel }) {
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label style={{ fontSize: '0.85rem' }}>Fecha de Nacimiento</label>
-                <input 
-                  type="date" 
-                  required 
-                  min="2010-01-01"
-                  max={fechaHoy}
+                <CampoFechaNacimiento 
                   value={fechaNacimientoEst} 
-                  onChange={e => setFechaNacimientoEst(e.target.value)} 
-                  style={{ padding: '0.65rem 0.8rem', fontSize: '0.95rem' }}
+                  onChange={setFechaNacimientoEst} 
+                  minYear={2010} 
+                  required={true} 
                 />
               </div>
             </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { X, Save, User, ShieldCheck, Phone } from 'lucide-react';
+import CampoFechaNacimiento from './CampoFechaNacimiento';
 
 function calcularEdad(fechaString) {
   if (!fechaString) return 0;
@@ -240,14 +241,11 @@ export default function ModalEditarEstudiante({ estudiante, onClose, onSaved }) 
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label style={{ fontSize: '0.85rem' }}>Fecha de Nacimiento</label>
-                <input 
-                  type="date" 
-                  required 
-                  min="2010-01-01"
-                  max={fechaHoy}
+                <CampoFechaNacimiento 
                   value={fechaNacimiento} 
-                  onChange={e => setFechaNacimiento(e.target.value)} 
+                  onChange={setFechaNacimiento} 
+                  minYear={2010} 
+                  required={true} 
                 />
               </div>
             </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Search } from 'lucide-react';
+import CampoFechaNacimiento from './CampoFechaNacimiento';
 
 function calcularEdad(fechaString) {
   if (!fechaString) return 0;
@@ -260,14 +261,11 @@ export default function FormularioIngreso({ onEstudianteAgregado, onGraduacion }
         </div>
 
         <div className="form-group">
-          <label>Fecha de Nacimiento</label>
-          <input 
-            type="date" 
-            required 
-            min="2010-01-01"
-            max={`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`}
+          <CampoFechaNacimiento 
             value={fechaNacimiento} 
-            onChange={e => setFechaNacimiento(e.target.value)} 
+            onChange={setFechaNacimiento} 
+            minYear={2010} 
+            required={true} 
           />
         </div>
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Folder, ChevronLeft, Calendar, Trash2, Search, Ticket } from 'lucide-react';
+import { Folder, ChevronLeft, Calendar, Trash2, Search, Ticket, Phone } from 'lucide-react';
 import ModalConfirmacion from './ModalConfirmacion';
 
 export default function HistorialDomingos() {
@@ -196,6 +196,13 @@ export default function HistorialDomingos() {
                   {e.nombre_representante && (
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.4rem' }}>
                       Representante: {e.nombre_representante}
+                    </div>
+                  )}
+
+                  {e.telefono_representante && (
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <Phone size={14} color="var(--accent-primary)" />
+                      <span><strong>Teléfono:</strong> {e.telefono_representante}</span>
                     </div>
                   )}
                 </div>
