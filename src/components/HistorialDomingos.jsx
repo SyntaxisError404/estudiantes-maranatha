@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Folder, ChevronLeft, Calendar, Trash2 } from 'lucide-react';
+import { Folder, ChevronLeft, Calendar, Trash2, Search, Ticket } from 'lucide-react';
 import ModalConfirmacion from './ModalConfirmacion';
 
 export default function HistorialDomingos() {
   const [historial, setHistorial] = useState([]);
   const [loading, setLoading] = useState(true);
   const [carpetaSeleccionada, setCarpetaSeleccionada] = useState(null);
+  const [busquedaHistorial, setBusquedaHistorial] = useState('');
   const [registroAEliminar, setRegistroAEliminar] = useState(null);
   const [isEliminando, setIsEliminando] = useState(false);
 
@@ -87,28 +88,55 @@ export default function HistorialDomingos() {
     return fechaISO;
   };
 
+  const extraerTicket = (repInfo) => {
+    if (!repInfo) return null;
+    const match = repInfo.match(/Ticket:\s*#?([0-9A-Za-z]+)/i);
+    return match ? match[1] : null;
+  };
+
+  const abrirCarpeta = (registro) => {
+    setCarpetaSeleccionada(registro);
+    setBusquedaHistorial('');
+  };
+
   if (loading) {
     return <div className="glass-panel" style={{ textAlign: 'center' }}>Cargando historial...</div>;
   }
 
   if (carpetaSeleccionada) {
     const estudiantes = carpetaSeleccionada.estudiantes || [];
-    
-    // Solo mostramos Usos Múltiples ya que se eliminaron los otros salones
     const lista = estudiantes;
     const ninos = lista.filter(e => e.genero === 'Niño').length;
     const ninas = lista.filter(e => e.genero === 'Niña').length;
 
+    // Filtrar la lista según la búsqueda del usuario
+    const termino = busquedaHistorial.trim().toLowerCase();
+    const listaFiltrada = lista.filter(e => {
+      if (!termino) return true;
+      const ticketNum = (extraerTicket(e.nombre_representante) || '').toLowerCase();
+      const nombreCompleto = `${e.nombre || ''} ${e.apellido || ''}`.toLowerCase();
+      const repInfo = (e.nombre_representante || '').toLowerCase();
+      const tel = (e.telefono_representante || '').toLowerCase();
+
+      return nombreCompleto.includes(termino) || 
+             ticketNum.includes(termino.replace('#', '')) || 
+             repInfo.includes(termino) || 
+             tel.includes(termino);
+    });
+
     return (
       <div className="glass-panel" style={{ animation: 'fadeIn 0.3s ease-out' }}>
         <button 
-          onClick={() => setCarpetaSeleccionada(null)}
+          onClick={() => {
+            setCarpetaSeleccionada(null);
+            setBusquedaHistorial('');
+          }}
           style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', marginBottom: '1.5rem', fontSize: '1rem' }}
         >
           <ChevronLeft size={20} /> Volver a las carpetas
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.2rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
             <Folder color="var(--accent-primary)" size={28} />
             Asistencia del {formatearFecha(carpetaSeleccionada.fecha)} — Usos Múltiples
@@ -118,23 +146,61 @@ export default function HistorialDomingos() {
           </span>
         </div>
 
+        {/* Buscador interno de la carpeta */}
+        <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
+          <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
+          <input 
+            type="text" 
+            value={busquedaHistorial} 
+            onChange={e => setBusquedaHistorial(e.target.value)} 
+            placeholder="Buscar por Ticket # (Ej: 001), Nombre o Representante..." 
+            style={{ 
+              paddingLeft: '2.5rem', 
+              width: '100%', 
+              background: 'var(--bg-secondary)', 
+              border: '1px solid var(--glass-border)', 
+              borderRadius: '8px', 
+              color: 'white', 
+              fontSize: '0.95rem' 
+            }}
+          />
+          {busquedaHistorial && (
+            <button 
+              onClick={() => setBusquedaHistorial('')} 
+              style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.85rem' }}
+            >
+              Limpiar
+            </button>
+          )}
+        </div>
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
-          {lista.length === 0 ? (
-            <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', gridColumn: '1 / -1', textAlign: 'center' }}>
-              No hubo asistencia registrada en este domingo.
+          {listaFiltrada.length === 0 ? (
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', gridColumn: '1 / -1', textAlign: 'center', padding: '2rem 0' }}>
+              {busquedaHistorial ? `No se encontraron resultados para "${busquedaHistorial}".` : 'No hubo asistencia registrada en este domingo.'}
             </p>
           ) : (
-            lista.map(e => (
-              <div key={e.id || e.nombre + e.apellido} className="estudiante-item" style={{ borderLeft: `4px solid ${e.genero === 'Niña' ? '#ec4899' : e.genero === 'Niño' ? 'var(--accent-primary)' : 'var(--text-secondary)'}`, padding: '1rem' }}>
-                <div className="estudiante-nombre" style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{e.nombre} {e.apellido}</div>
-                {e.edad && <div className="estudiante-edad" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{e.edad} años ({e.genero || 'No especificado'})</div>}
-                {e.nombre_representante && (
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.4rem' }}>
-                    Representante: {e.nombre_representante}
-                  </div>
-                )}
-              </div>
-            ))
+            listaFiltrada.map(e => {
+              const ticketNum = extraerTicket(e.nombre_representante);
+              return (
+                <div key={e.id || e.nombre + e.apellido} className="estudiante-item" style={{ borderLeft: `4px solid ${e.genero === 'Niña' ? '#ec4899' : e.genero === 'Niño' ? 'var(--accent-primary)' : 'var(--text-secondary)'}`, padding: '1rem' }}>
+                  <div className="estudiante-nombre" style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{e.nombre} {e.apellido}</div>
+                  {e.edad && <div className="estudiante-edad" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{e.edad} años ({e.genero || 'No especificado'})</div>}
+                  
+                  {ticketNum && (
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', background: 'rgba(59, 130, 246, 0.15)', border: '1px solid var(--accent-primary)', color: 'white', padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 'bold', marginTop: '0.4rem' }}>
+                      <Ticket size={14} color="var(--accent-primary)" /> Ticket #{ticketNum}
+                    </div>
+                  )}
+
+                  {e.nombre_representante && (
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.4rem' }}>
+                      Representante: {e.nombre_representante}
+                    </div>
+                  )}
+                </div>
+              );
+            })
           )}
         </div>
       </div>
@@ -145,7 +211,7 @@ export default function HistorialDomingos() {
     <div className="glass-panel" style={{ animation: 'fadeIn 0.3s ease-out' }}>
       <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <Calendar color="var(--accent-primary)" />
-        Historial
+        Historial de Asistencias
       </h2>
       
       {historial.length === 0 ? (
@@ -157,7 +223,7 @@ export default function HistorialDomingos() {
           {historial.map((registro) => (
             <div 
               key={registro.id} 
-              onClick={() => setCarpetaSeleccionada(registro)}
+              onClick={() => abrirCarpeta(registro)}
               style={{
                 background: 'var(--bg-secondary)',
                 border: '1px solid var(--glass-border)',
