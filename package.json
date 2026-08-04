@@ -1,6 +1,7 @@
 {
   "name": "estudiantes-maranatha",
   "private": true,
+  "homepage": "https://maranatha-kids.github.io/estudiantes-maranatha/",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
