@@ -244,6 +244,7 @@ export default function ModalEditarEstudiante({ estudiante, onClose, onSaved }) 
                 <input 
                   type="date" 
                   required 
+                  min="2010-01-01"
                   max={fechaHoy}
                   value={fechaNacimiento} 
                   onChange={e => setFechaNacimiento(e.target.value)} 

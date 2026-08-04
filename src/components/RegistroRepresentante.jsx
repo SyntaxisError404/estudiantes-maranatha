@@ -401,6 +401,7 @@ export default function RegistroRepresentante({ onVolverAlPanel }) {
                 <input 
                   type="date" 
                   required 
+                  min="2010-01-01"
                   max={fechaHoy}
                   value={fechaNacimientoEst} 
                   onChange={e => setFechaNacimientoEst(e.target.value)} 
