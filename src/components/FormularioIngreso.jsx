@@ -103,6 +103,22 @@ export default function FormularioIngreso({ onEstudianteAgregado, onGraduacion }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!nombre.trim()) {
+      setMessage({ type: 'error', text: 'Por favor, ingrese el nombre del estudiante.' });
+      return;
+    }
+    if (!apellido.trim()) {
+      setMessage({ type: 'error', text: 'Por favor, ingrese el apellido del estudiante.' });
+      return;
+    }
+    if (!genero) {
+      setMessage({ type: 'error', text: 'Por favor, seleccione si es Niño o Niña.' });
+      return;
+    }
+    if (!fechaNacimiento) {
+      setMessage({ type: 'error', text: 'Por favor, ingrese la fecha de nacimiento.' });
+      return;
+    }
     if (edad < 8) {
       setMessage({ type: 'error', text: 'El niño debe tener al menos 8 años.' });
       return;
@@ -304,7 +320,11 @@ export default function FormularioIngreso({ onEstudianteAgregado, onGraduacion }
           </div>
         )}
 
-        <button type="submit" className="btn-primary" disabled={isSubmitting || (edad !== null && (edad < 8 || edad > 13))}>
+        <button 
+          type="submit" 
+          className="btn-primary" 
+          disabled={isSubmitting || !nombre.trim() || !apellido.trim() || !genero || !fechaNacimiento || (edad !== null && (edad < 8 || edad > 13))}
+        >
           {isSubmitting ? 'Guardando...' : (estudianteSeleccionadoId ? 'Registrar Asistencia' : 'Registrar Nuevo Estudiante')}
         </button>
       </form>

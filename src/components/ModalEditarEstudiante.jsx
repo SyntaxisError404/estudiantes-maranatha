@@ -95,6 +95,31 @@ export default function ModalEditarEstudiante({ estudiante, onClose, onSaved }) 
     setIsSubmitting(true);
 
     try {
+      if (!nombre.trim()) {
+        setErrorMsg('Por favor, ingrese el nombre del estudiante.');
+        setIsSubmitting(false);
+        return;
+      }
+      if (!apellido.trim()) {
+        setErrorMsg('Por favor, ingrese el apellido del estudiante.');
+        setIsSubmitting(false);
+        return;
+      }
+      if (!genero) {
+        setErrorMsg('Por favor, seleccione el género (Niño o Niña).');
+        setIsSubmitting(false);
+        return;
+      }
+      if (!fechaNacimiento) {
+        setErrorMsg('Por favor, ingrese la fecha de nacimiento.');
+        setIsSubmitting(false);
+        return;
+      }
+      if (!nombreRep.trim()) {
+        setErrorMsg('Por favor, ingrese la información del representante.');
+        setIsSubmitting(false);
+        return;
+      }
       if (edadCalculada < 8) {
         setErrorMsg('El estudiante debe tener al menos 8 años.');
         setIsSubmitting(false);

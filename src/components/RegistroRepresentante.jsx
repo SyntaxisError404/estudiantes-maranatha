@@ -69,9 +69,43 @@ export default function RegistroRepresentante({ onVolverAlPanel }) {
     e.preventDefault();
     setErrorMsg(null);
 
-    // Validar teléfono: 7 dígitos restantes
+    if (!nombreRep.trim()) {
+      setErrorMsg('Por favor, ingrese el nombre del representante.');
+      return;
+    }
+
+    if (!apellidoRep.trim()) {
+      setErrorMsg('Por favor, ingrese el apellido del representante.');
+      return;
+    }
+
     if (numeroTelefono.length !== 7) {
       setErrorMsg('El número de teléfono debe tener los 7 dígitos completos después del código seleccionado (Ej. 0414 + 1234567).');
+      return;
+    }
+
+    if (parentescoRep === 'Otro' && !otroParentesco.trim()) {
+      setErrorMsg('Por favor, especifique el parentesco con el niño/a.');
+      return;
+    }
+
+    if (!nombreEst.trim()) {
+      setErrorMsg('Por favor, ingrese el nombre del niño/a.');
+      return;
+    }
+
+    if (!apellidoEst.trim()) {
+      setErrorMsg('Por favor, ingrese el apellido del niño/a.');
+      return;
+    }
+
+    if (!generoEst) {
+      setErrorMsg('Por favor, seleccione si es Niño o Niña.');
+      return;
+    }
+
+    if (!fechaNacimientoEst) {
+      setErrorMsg('Por favor, seleccione la fecha de nacimiento del niño/a.');
       return;
     }
 
@@ -425,7 +459,19 @@ export default function RegistroRepresentante({ onVolverAlPanel }) {
           <button 
             type="submit" 
             className="btn-primary" 
-            disabled={isSubmitting || numeroTelefono.length !== 7 || (fechaNacimientoEst && (edad < 8 || edad > 13))}
+            disabled={
+              isSubmitting || 
+              !nombreRep.trim() || 
+              !apellidoRep.trim() || 
+              numeroTelefono.length !== 7 || 
+              (parentescoRep === 'Otro' && !otroParentesco.trim()) || 
+              !nombreEst.trim() || 
+              !apellidoEst.trim() || 
+              !generoEst || 
+              !fechaNacimientoEst || 
+              edad < 8 || 
+              edad > 13
+            }
             style={{ width: '100%', padding: '0.9rem', fontSize: '1rem', fontWeight: 'bold' }}
           >
             {isSubmitting ? 'Generando Turno...' : 'Obtener Número de Turno'}
