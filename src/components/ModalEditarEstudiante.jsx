@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { X, Save, User, ShieldCheck, Phone } from 'lucide-react';
+import { X, Save, User, ShieldCheck, Phone, Trash2 } from 'lucide-react';
 import CampoFechaNacimiento from './CampoFechaNacimiento';
 
 function calcularEdad(fechaString) {
