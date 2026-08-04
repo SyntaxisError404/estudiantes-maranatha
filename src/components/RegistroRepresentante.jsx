@@ -43,9 +43,23 @@ export default function RegistroRepresentante({ onVolverAlPanel }) {
 
   const [ticketSesion, setTicketSesion] = useState(null);
 
-  // Generar número de ticket único de 4 dígitos
-  const generarTicket = () => {
-    return Math.floor(1000 + Math.random() * 9000).toString();
+  // Generar número de ticket secuencial (000-400) basado en cuántos estudiantes activos hay hoy
+  const generarTicket = async () => {
+    const { count, error } = await supabase
+      .from('estudiantes')
+      .select('*', { count: 'exact', head: true })
+      .eq('activo_este_domingo', true);
+
+    if (error) {
+      console.error('Error al obtener conteo de tickets:', error);
+      return '001';
+    }
+
+    const siguiente = (count || 0) + 1;
+    if (siguiente > 400) {
+      return '400';
+    }
+    return String(siguiente).padStart(3, '0');
   };
 
   const edad = calcularEdad(fechaNacimientoEst);
@@ -74,7 +88,7 @@ export default function RegistroRepresentante({ onVolverAlPanel }) {
 
     try {
       const parentescoFinal = parentescoRep === 'Otro' ? otroParentesco : parentescoRep;
-      const numTicket = ticketSesion || generarTicket();
+      const numTicket = ticketSesion || await generarTicket();
       if (!ticketSesion) {
         setTicketSesion(numTicket);
       }
