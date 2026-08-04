@@ -74,10 +74,15 @@ export default function HistorialDomingos() {
   };
 
   const formatearFecha = (fechaISO) => {
-    // Si la fecha viene como string yyyy-mm-dd
     const partes = fechaISO.split('-');
     if (partes.length === 3) {
-      return `${partes[2]}/${partes[1]}/${partes[0]}`; // dd/mm/yyyy
+      const anio = parseInt(partes[0], 10);
+      const mes = parseInt(partes[1], 10) - 1;
+      const dia = parseInt(partes[2], 10);
+      const fecha = new Date(anio, mes, dia);
+      const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+      const nombreDia = diasSemana[fecha.getDay()];
+      return `${nombreDia} ${partes[2]}/${partes[1]}/${partes[0]}`;
     }
     return fechaISO;
   };
